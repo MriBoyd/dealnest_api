@@ -9,6 +9,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './infrastructure/strategies/jwt.strategy';
 import { EmailService } from './infrastructure/adapters/email.service';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { GoogleStrategy } from './infrastructure/strategies/google.strategy';
 
 @Module({
   imports: [
@@ -32,7 +33,7 @@ import { ThrottlerModule } from '@nestjs/throttler';
       ],
     }),
   ],
-  providers: [AuthService, LocalStrategy, JwtStrategy, EmailService],
+  providers: [AuthService, LocalStrategy, JwtStrategy, EmailService, GoogleStrategy],
   controllers: [AuthController],
   exports: [EmailService],
 

@@ -5,9 +5,11 @@ import { CreateUserDto } from '../../presentation/dto/create-user.dto';
 import { Repository } from 'typeorm';
 import { User } from '../../domain/entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Role } from 'src/common/enums/role.enum';
 import { randomBytes } from 'crypto';
 import { EmailService } from 'src/modules/auth/infrastructure/adapters/email.service';
+import { plainToInstance } from 'class-transformer';
+import { UserResponseDto } from '../../presentation/dto/user-response.dto';
+import { UserMapper } from '../mappers/user.mapper';
 
 
 @Injectable()
@@ -19,35 +21,58 @@ export class UserService {
 	) { }
 
 
-	async create(createUserDto: CreateUserDto): Promise<User> {
-		const { phone_number, email, password, role, name } = createUserDto;
-
-		// Prevent self-registering as ADMIN
-		if (role === Role.ADMIN) {
-			throw new BadRequestException('You cannot self-register as an admin.');
-		}
+	async createUser(createUserDto: CreateUserDto, isOAuth = false): Promise<UserResponseDto> {
+		const { phone_number, email, password, name } = createUserDto;
 
 		const existing = await this.usersRepository.findOne({
 			where: [{ phone_number: phone_number || undefined }, { email }],
 		});
-		
+
 		if (existing) {
 			throw new ConflictException('User already exists.');
 		}
 
-		const password_hash = await bcrypt.hash(password, 10);
+
+		let password_hash: string | undefined = undefined;
+		let is_email_verified = false;
+
+		// If password is provided, treat as non-OAuth (require password, do not allow verified)
+		if (password) {
+			if (!password || password.length < 8) {
+				throw new BadRequestException('Password is required and must be at least 8 characters.');
+			}
+			if (createUserDto.is_email_verified) {
+				// Never allow client to set this
+				throw new BadRequestException('is_email_verified must be false for password-based registration.');
+			}
+			password_hash = await bcrypt.hash(password, 10);
+			is_email_verified = false; // Never allow client to set this for password-based
+		} else {
+			// Only allow is_email_verified for OAuth if called from trusted OAuth flow
+			if (!isOAuth) {
+				throw new BadRequestException('registration without password is not allowed.');
+			}
+			is_email_verified = !!createUserDto.is_email_verified;
+			if (!is_email_verified) {
+				throw new BadRequestException('OAuth registration must set is_email_verified to true.');
+			}
+		}
 
 		const user = this.usersRepository.create({
 			phone_number,
 			email,
 			password_hash,
 			name,
-			role,
+			role: createUserDto.role,
+			is_email_verified,
 		});
 
-		await this.generateEmailVerificationToken(user);
+		if (password) {
+			await this.generateEmailVerificationToken(user);
+		}
 
-		return this.usersRepository.save(user);
+		const saved = await this.usersRepository.save(user);
+		return UserMapper.toResponse(saved);
 	}
 
 	async generateEmailVerificationToken(user: User) {
@@ -121,10 +146,10 @@ export class UserService {
 		if (!user) {
 			throw new NotFoundException(`User with id ${id} not found`);
 		}
-		return user;
+		return plainToInstance(User, user, { excludeExtraneousValues: true });
 	}
 
-	async findUserByEmail(email: string): Promise<User> {
+	async findUserByEmail(email: string): Promise<User | null> {
 		const user = await this.usersRepository.findOne({ where: { email } });
 		if (!user) {
 			throw new NotFoundException(`User with email ${email} not found`);

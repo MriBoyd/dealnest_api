@@ -1,10 +1,11 @@
 // auth/auth.service.ts
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { Role } from 'src/common/enums/role.enum';
+import { UserMapper } from 'src/modules/user/application/mappers/user.mapper';
 import { UserService } from 'src/modules/user/application/services/user.service';
-import { User } from 'src/modules/user/domain/entities/user.entity';
+import { UserResponseDto } from 'src/modules/user/presentation/dto/user-response.dto';
 
 @Injectable()
 export class AuthService {
@@ -13,9 +14,8 @@ export class AuthService {
 		private jwtService: JwtService,
 	) { }
 
-	async validateUser(email: string, password: string): Promise<User> {
+	async validateUser(email: string, password: string): Promise<UserResponseDto> {
 		const user = await this.usersService.findUserByEmail(email);
-		console.log('user', user);
 		if (!user || !user.password_hash) {
 			throw new UnauthorizedException('Invalid phone or password');
 		}
@@ -25,36 +25,35 @@ export class AuthService {
 			throw new UnauthorizedException('Invalid phone or password');
 		}
 
-		return user;
+		return UserMapper.toResponse(user);
 	}
 
 	async validateOAuthLogin(email: string, name: string) {
-		let user = await this.usersService.findUserByEmail(email);
-		if (!user) {
-			user = await this.usersService.create({
-				email,
-				name,
-				phone_number: null,
-				password: null,
-				role: Role.INDIVIDUAL_BUYER,
-				is_email_verified: true, 
-			});
+		try {
+			const user = await this.usersService.findUserByEmail(email);
+			return user;
+		} catch (error) {
+			if (error instanceof NotFoundException) {
+				const user = await this.usersService.createUser({
+					email,
+					name,
+					phone_number: null,
+					password: null,
+					role: Role.INDIVIDUAL_BUYER,
+					is_email_verified: true,
+				}, true);
+				return user;
+			}
+			throw error;
 		}
-		return user;
 	}
 
 
-	async login(user: User) {
-		const payload = { sub: user.id, role: user.role };
+	async login(user: UserResponseDto) {
+		const payload = { sub: user.id, email: user.email };
 		return {
 			access_token: this.jwtService.sign(payload),
-			user: {
-				id: user.id,
-				phone_number: user.phone_number,
-				email: user.email,
-				name: user.name,
-				role: user.role,
-			},
+			user,
 		};
 	}
 }

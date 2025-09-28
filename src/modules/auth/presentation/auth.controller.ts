@@ -2,11 +2,11 @@ import { Body, Controller, Get, HttpCode, NotFoundException, Post, Query, Req, R
 import { AuthService } from '../application/services/auth.service';
 import { LocalAuthGuard } from '../infrastructure/guards/local-auth.guard';
 import { CreateUserDto } from 'src/modules/user/presentation/dto/create-user.dto';
-import { User } from 'src/modules/user/domain/entities/user.entity';
 import { UserService } from 'src/modules/user/application/services/user.service';
 import { LoginDto } from './dto/login.dto';
 import { Throttle } from '@nestjs/throttler';
 import { AuthGuard } from '@nestjs/passport';
+import { UserMapper } from 'src/modules/user/application/mappers/user.mapper';
 
 @Controller('auth')
 export class AuthController {
@@ -14,7 +14,6 @@ export class AuthController {
 
 	// return 200 on successful login
 	@HttpCode(200)
-	@Post('login')
 	@UseGuards(LocalAuthGuard)
 	@Post('login')
 	async login(@Body() loginDto: LoginDto) {
@@ -28,8 +27,8 @@ export class AuthController {
 	// return 201 on successful registration
 	@HttpCode(201)
 	@Post('register')
-	async register(@Body() createUserDto: CreateUserDto): Promise<User> {
-		return this.userService.create(createUserDto);
+	async register(@Body() dto: CreateUserDto) {
+		return this.userService.createUser(dto);
 	}
 
 
@@ -65,7 +64,7 @@ export class AuthController {
 	@UseGuards(AuthGuard('google'))
 	googleAuthRedirect(@Req() req) {
 		// issue JWT here
-		return this.authService.login(req.user);
+		return this.authService.login(UserMapper.toResponse(req.user));
 	}
 
 

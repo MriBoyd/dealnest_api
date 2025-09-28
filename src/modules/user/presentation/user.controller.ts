@@ -1,6 +1,8 @@
-import { Controller, Get, Request, UseGuards } from '@nestjs/common';
+import { Controller, Get, NotFoundException, Request, UseGuards } from '@nestjs/common';
 import { UserService } from '../application/services/user.service';
 import { JwtAuthGuard } from 'src/modules/auth/infrastructure/guards/jwt-auth.guard';
+import { UserResponseDto } from './dto/user-response.dto';
+import { UserMapper } from '../application/mappers/user.mapper';
 
 
 
@@ -11,8 +13,12 @@ export class UserController {
 
     @UseGuards(JwtAuthGuard)
     @Get('me')
-    getUserInfo(@Request() req) {
-        return this.userService.findUserByEmail(req.user.email);
+    async getUserInfo(@Request() req): Promise<UserResponseDto> {
+        const user = await this.userService.findUserByEmail(req.user.email);
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+        return UserMapper.toResponse(user);
     }
 
 
