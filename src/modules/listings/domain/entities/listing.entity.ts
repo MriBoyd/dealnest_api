@@ -5,19 +5,13 @@ import {
 	ManyToOne,
 	CreateDateColumn,
 	UpdateDateColumn,
+	OneToMany,
 } from 'typeorm';
 import { User } from '../../../user/domain/entities/user.entity';
 import { Vertical } from '../enums/vertical.enum';
+import { ListingStatus } from '../enums/listing-status.enum';
+import { Media } from 'src/modules/media/domain/entities/media.entity';
 
-
-
-export enum ListingStatus {
-	DRAFT = 'draft',
-	PENDING_VERIFICATION = 'pending_verification',
-	ACTIVE = 'active',
-	INACTIVE = 'inactive',
-	SOLD_RENTED = 'sold_rented',
-}
 
 export enum ListingVerificationLevel {
 	NONE = 'none',
@@ -75,8 +69,8 @@ export class Listing {
 	@Column({ type: 'jsonb', nullable: true })
 	extra_costs?: { name: string; amount: number }[];
 
-	@Column({ nullable: true })
-	media_group_id?: string;
+	@OneToMany(() => Media, (media) => media.listing, { cascade: true })
+	media: Media[];
 
 	@Column({ type: 'enum', enum: ListingStatus, default: ListingStatus.PENDING_VERIFICATION })
 	status: ListingStatus;

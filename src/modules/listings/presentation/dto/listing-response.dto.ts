@@ -1,9 +1,11 @@
-import { User } from 'src/modules/user/domain/entities/user.entity';
-import { ListingStatus, ListingVerificationLevel } from '../../domain/entities/listing.entity';
+import { UserResponseDto } from 'src/modules/user/presentation/dto/user-response.dto';
+import { ListingVerificationLevel } from '../../domain/entities/listing.entity';
 import { Vertical } from '../../domain/enums/vertical.enum';
+import { ListingStatus } from '../../domain/enums/listing-status.enum';
 
 export class ListingResponseDto {
 	id: string;
+	owner: UserResponseDto;
 	vertical: Vertical;
 	title: string;
 	description?: string;
@@ -21,10 +23,9 @@ export class ListingResponseDto {
 	pet_policy?: string;
 	nearby?: string[];
 	extra_costs?: { name: string; amount: number }[];
-	media_group_id?: string;
+	media: any[];
 	status: ListingStatus;
 	verification_level: ListingVerificationLevel;
 	created_at: Date;
 	updated_at: Date;
-	owner_id: string;
 }

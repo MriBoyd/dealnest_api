@@ -70,7 +70,6 @@ export class User {
     kyc_status: string;
 
     @OneToMany(() => Listing, (listing) => listing.owner)
-    @Exclude()
     listings: Listing[];
 
     @CreateDateColumn()

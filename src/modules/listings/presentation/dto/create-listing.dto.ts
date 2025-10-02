@@ -9,6 +9,7 @@ import {
     ValidateNested,
     Min,
     Max,
+    IsUUID,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { Vertical } from '../../domain/enums/vertical.enum';
@@ -100,6 +101,7 @@ export class CreateListingDto {
     extra_costs?: ExtraCostDto[];
 
     @IsOptional()
-    @IsString()
-    media_group_id?: string;
+    @IsArray()
+    @IsUUID('all', { each: true })
+    mediaIds?: string[];
 }
