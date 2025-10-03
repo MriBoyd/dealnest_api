@@ -10,10 +10,10 @@ import { User } from 'src/modules/user/domain/entities/user.entity';
 import { UpdateListingMediaDto } from './dto/update-listing-media.dto';
 
 @Controller('listings')
+@UseGuards(JwtAuthGuard)
 export class ListingsController {
     constructor(private readonly listingsService: ListingsService) { }
 
-    @UseGuards(JwtAuthGuard)
     @Post('create')
     async create(@Body() dto: CreateListingDto, @Request() req) {
         return this.listingsService.create(dto, req.user);
@@ -31,9 +31,7 @@ export class ListingsController {
         return this.listingsService.findById(id);
     }
 
-
     @Patch(':id/status')
-    @UseGuards(JwtAuthGuard)
     async updateStatus(
         @Param('id', ParseUUIDPipe) id: string,
         @Body() dto: UpdateListingStatusDto,
@@ -42,7 +40,6 @@ export class ListingsController {
         return this.listingsService.updateStatus(id, dto, user);
     }
 
-    @UseGuards(JwtAuthGuard)
     @Patch(':id/media')
     async updateMedia(
         @Param('id') id: string,
@@ -51,7 +48,4 @@ export class ListingsController {
     ) {
         return this.listingsService.updateMedia(id, dto, user);
     }
-
-
-
 }

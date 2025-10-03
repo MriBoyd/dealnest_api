@@ -1,8 +1,10 @@
-import { Controller, Post, Body, Get, Param } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, UseGuards } from '@nestjs/common';
 import { MediaService } from '../application/services/media.service';
 import { UploadMediaDto } from './dto/upload-media.dto';
+import { JwtAuthGuard } from 'src/modules/auth/infrastructure/guards/jwt-auth.guard';
 
 @Controller('media')
+@UseGuards(JwtAuthGuard)
 export class MediaController {
     constructor(private readonly mediaService: MediaService) { }
 

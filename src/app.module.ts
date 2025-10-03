@@ -8,6 +8,8 @@ import { SwaggerSyncModule } from 'nestjs-swagger-sync';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ListingsModule } from './modules/listings/listings.module';
 import { MediaModule } from './modules/media/media.module';
+import { AdminModule } from './modules/admin/admin.module';
+import { BookingsModule } from './modules/bookings/bookings.module';
 @Module({
   imports: [UserModule, AuthModule, ConfigModule.forRoot(), SwaggerSyncModule.register({
     apiKey: 'PMAK-68c91efe594c280001e8a3ec-cc11deccd20f33b15aabd532040b9edfff',
@@ -29,6 +31,8 @@ import { MediaModule } from './modules/media/media.module';
     }),
     ListingsModule,
     MediaModule,
+    AdminModule,
+    BookingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

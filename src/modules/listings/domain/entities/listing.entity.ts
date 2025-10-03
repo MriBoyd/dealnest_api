@@ -84,3 +84,5 @@ export class Listing {
 	@UpdateDateColumn()
 	updated_at: Date;
 }
+
+export { ListingStatus };
