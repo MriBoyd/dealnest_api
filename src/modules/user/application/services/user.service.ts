@@ -10,6 +10,7 @@ import { EmailService } from 'src/modules/auth/infrastructure/adapters/email.ser
 import { plainToInstance } from 'class-transformer';
 import { UserResponseDto } from '../../presentation/dto/user-response.dto';
 import { UserMapper } from '../mappers/user.mapper';
+import { DEFAULT_PROFILE_PIC_BASE64, DEFAULT_PROFILE_PIC_MIMETYPE } from 'src/config/defaults';
 
 
 @Injectable()
@@ -17,7 +18,9 @@ export class UserService {
 	constructor(
 		@InjectRepository(User)
 		private usersRepository: Repository<User>,
-		private emailService: EmailService
+		private emailService: EmailService,
+		@InjectRepository(User) private readonly userRepo: Repository<User>,
+
 	) { }
 
 
@@ -150,7 +153,7 @@ export class UserService {
 	}
 
 	async findUserByEmail(email: string): Promise<User | null> {
-		const user = await this.usersRepository.findOne({ where: { email } });
+		const user = await this.usersRepository.findOne({ where: { email: email.toLowerCase() } });
 		if (!user) {
 			throw new NotFoundException(`User with email ${email} not found`);
 		}
@@ -158,5 +161,33 @@ export class UserService {
 
 	}
 
+	async uploadProfilePicBase64(userId: string, base64: string, mimetype: string): Promise<UserResponseDto> {
+		const user = await this.userRepo.findOne({ where: { id: userId } });
+		if (!user) throw new NotFoundException('User not found');
 
+		// convert base64 string to Buffer
+		const buffer = Buffer.from(base64, 'base64');
+
+		user.profile_pic_mimetype = mimetype;
+		user.profile_pic_data = buffer;
+
+		this.userRepo.save(user);
+
+		return UserMapper.toResponse(user);
+	}
+
+	async getProfilePic(
+		userId: string,
+	): Promise<{ mimetype: string; base64: string }> {
+		const user = await this.usersRepository.findOne({ where: { id: userId } });
+
+		if (!user || !user.profile_pic_data) {
+			throw new NotFoundException('Profile picture not found');
+		}
+
+		return {
+			mimetype: user.profile_pic_mimetype ?? DEFAULT_PROFILE_PIC_MIMETYPE,
+			base64: user.profile_pic_data.toString('base64') ?? DEFAULT_PROFILE_PIC_BASE64,
+		};
+	}
 }

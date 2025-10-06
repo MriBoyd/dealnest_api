@@ -10,9 +10,9 @@ export class UserMapper {
             phone_number: user.phone_number ?? undefined,
             agent_code: user.agent_code,
             role: user.role,
+            kyc_status: user.kyc_status,
             preferred_language: user.preferred_language,
             is_email_verified: user.is_email_verified,
-            verification_status: user.verification_status,
             created_at: user.created_at,
             updated_at: user.updated_at,
         };

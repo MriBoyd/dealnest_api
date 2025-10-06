@@ -5,15 +5,17 @@ import { User } from './domain/entities/user.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from '../auth/auth.module';
 import { MediaModule } from '../media/media.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
 	providers: [UserService],
-	exports: [UserService],
+	exports: [UserService, TypeOrmModule],
 	controllers: [UserController],
 	imports: [
 		TypeOrmModule.forFeature([User]),
 		forwardRef(() => AuthModule),
-		MediaModule
+		MediaModule,
+		ConfigModule,
 	],
 })
 export class UserModule { }

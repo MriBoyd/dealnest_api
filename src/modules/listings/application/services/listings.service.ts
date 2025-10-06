@@ -130,12 +130,14 @@ export class ListingsService {
 
         return {
             data: items,
-            total,
-            page,
-            limit,
-            totalPages: Math.ceil(total / limit),
-            sortBy,
-            order,
+            meta: {
+                total,
+                page,
+                limit,
+                totalPages: Math.ceil(total / limit),
+                sortBy,
+                order,
+            }
         };
     }
 
@@ -186,7 +188,7 @@ export class ListingsService {
 
         if (!listing) throw new NotFoundException('Listing not found');
 
-        
+
         if (dto.mediaIds) {
             const mediaList = await this.mediaRepository.find({
                 where: { id: In(dto.mediaIds) },

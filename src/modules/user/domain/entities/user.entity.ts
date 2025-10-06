@@ -1,12 +1,26 @@
 import { Exclude, Expose } from 'class-transformer';
 import { Role } from 'src/common/enums/role.enum';
+import { Kyc } from 'src/modules/kyc/domain/entities/kyc.entity';
 import { Listing } from 'src/modules/listings/domain/entities/listing.entity';
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToOne, OneToMany } from 'typeorm';
+
+export enum KycStatus {
+    NOT_SUBMITTED = 'not_submitted',
+    PENDING = 'pending',
+    APPROVED = 'approved',
+    REJECTED = 'rejected',
+}
 
 @Entity('users')
 export class User {
     @PrimaryGeneratedColumn('uuid')
     id: string;
+
+    @Column({ type: 'bytea', nullable: true })
+    profile_pic_data?: Buffer;
+
+    @Column({ nullable: true })
+    profile_pic_mimetype?: string;
 
     @Column({ unique: true })
     @Expose()
@@ -63,11 +77,17 @@ export class User {
 
     @Column({
         type: 'enum',
-        enum: ['pending', 'approved', 'rejected'],
-        default: 'pending',
+        enum: KycStatus,
+        default: KycStatus.NOT_SUBMITTED,
     })
     @Expose()
-    kyc_status: string;
+    kyc_status: KycStatus;
+
+    @Column({ type: 'text', nullable: true })
+    kyc_notes?: string | null;
+
+    @OneToOne(() => Kyc, (kyc) => kyc.user)
+    kyc: Kyc;
 
     @OneToMany(() => Listing, (listing) => listing.owner)
     listings: Listing[];
@@ -79,10 +99,5 @@ export class User {
     @UpdateDateColumn()
     @Expose()
     updated_at: Date;
-    @Column({
-        type: 'enum',
-        enum: ['none', 'basic', 'verified', 'certified'],
-        default: 'none',
-    })
-    verification_status: "none" | "basic" | "verified" | "certified";
+
 }
