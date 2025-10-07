@@ -3,11 +3,9 @@ import {
   Controller,
   Get,
   HttpCode,
-  NotFoundException,
   Post,
   Query,
   Req,
-  Request,
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from '../application/services/auth.service';

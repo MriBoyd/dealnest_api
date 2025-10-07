@@ -2,6 +2,7 @@ import { UserResponseDto } from 'src/modules/user/presentation/dto/user-response
 import { ListingVerificationLevel } from '../../domain/entities/listing.entity';
 import { Vertical } from '../../domain/enums/vertical.enum';
 import { ListingStatus } from '../../domain/enums/listing-status.enum';
+import { Media } from 'src/modules/media/domain/entities/media.entity';
 
 export class ListingResponseDto {
   id: string;
@@ -23,7 +24,7 @@ export class ListingResponseDto {
   pet_policy?: string;
   nearby?: string[];
   extra_costs?: { name: string; amount: number }[];
-  media: any[];
+  media: Media[];
   status: ListingStatus;
   verification_level: ListingVerificationLevel;
   created_at: Date;
