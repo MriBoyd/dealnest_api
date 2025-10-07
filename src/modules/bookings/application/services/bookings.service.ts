@@ -29,7 +29,7 @@ export class BookingsService {
         return this.bookingRepo.save(booking);
     }
 
-    async listUserBookings(user: User) {
+    async findUserBookings(user: User) {
         return this.bookingRepo.find({
             where: { user: { id: user.id } },
             relations: ['listing'],
@@ -63,5 +63,14 @@ export class BookingsService {
 
         booking.status = dto.status;
         return this.bookingRepo.save(booking);
+    }
+
+    // For sellers (based on listings they own)
+    async findSellerBookings(user: User) {
+        return this.bookingRepo.find({
+            where: { listing: { owner: { id: user.id } } },
+            relations: ['listing', 'buyer'],
+            order: { created_at: 'DESC' },
+        });
     }
 }

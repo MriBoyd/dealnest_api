@@ -14,7 +14,7 @@ import { UpdateListingMediaDto } from './dto/update-listing-media.dto';
 export class ListingsController {
     constructor(private readonly listingsService: ListingsService) { }
 
-    @Post('create')
+    @Post()
     async create(@Body() dto: CreateListingDto, @Request() req) {
         return this.listingsService.create(dto, req.user);
     }

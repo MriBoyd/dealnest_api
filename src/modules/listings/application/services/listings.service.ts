@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { Listing } from '../../domain/entities/listing.entity';
 import { CreateListingDto } from '../../presentation/dto/create-listing.dto';
 import { User } from '../../../user/domain/entities/user.entity';
@@ -8,19 +8,31 @@ import { ListingMapper } from '../mappers/listing.mapper';
 import { ListingResponseDto } from '../../presentation/dto/listing-response.dto';
 import { FilterListingsDto } from '../../presentation/dto/filter-listings.dto';
 import { UpdateListingStatusDto } from '../../presentation/dto/update-listing-status.dto';
-import { MediaService } from 'src/modules/media/application/services/media.service';
 import { Media } from 'src/modules/media/domain/entities/media.entity';
 import { UpdateListingMediaDto } from '../../presentation/dto/update-listing-media.dto';
 
 @Injectable()
 export class ListingsService {
+    private postGisInstalled: boolean | null = null;
+
     constructor(
         @InjectRepository(Listing)
         private readonly listingsRepository: Repository<Listing>,
-        private readonly mediaService: MediaService,
         @InjectRepository(Media)
         private readonly mediaRepository: Repository<Media>,
+        @InjectDataSource()
+        private readonly dataSource: DataSource,
     ) { }
+
+    private async isPostGisInstalled(): Promise<boolean> {
+        if (this.postGisInstalled === null) {
+            const result = await this.dataSource.query(
+                `SELECT 1 FROM pg_extension WHERE extname = 'postgis'`
+            );
+            this.postGisInstalled = result.length > 0;
+        }
+        return this.postGisInstalled;
+    }
 
     async create(dto: CreateListingDto, owner: User): Promise<ListingResponseDto> {
         const listing = this.listingsRepository.create({
@@ -40,12 +52,10 @@ export class ListingsService {
                 throw new BadRequestException('No media found for given group id');
             }
 
-            // ❌ Prevent reusing media that already belongs to another listing
             if (mediaList.some((m) => m.listing)) {
                 throw new BadRequestException('Some media already assigned to another listing');
             }
 
-            // ✅ Link only if free
             for (const media of mediaList) {
                 media.listing = saved;
             }
@@ -68,19 +78,16 @@ export class ListingsService {
     async findAll(filters: FilterListingsDto) {
         const qb = this.listingsRepository.createQueryBuilder('listing');
 
-        // Filter by city (stored in JSONB location)
         if (filters.city) {
             qb.andWhere(`listing.location->>'city' ILIKE :city`, {
                 city: `%${filters.city}%`,
             });
         }
 
-        // Filter by vertical
         if (filters.vertical) {
             qb.andWhere('listing.vertical = :vertical', { vertical: filters.vertical });
         }
 
-        // Filter by price range
         if (filters.minPrice) {
             qb.andWhere('listing.price >= :minPrice', { minPrice: filters.minPrice });
         }
@@ -88,7 +95,6 @@ export class ListingsService {
             qb.andWhere('listing.price <= :maxPrice', { maxPrice: filters.maxPrice });
         }
 
-        // Keyword search
         if (filters.q) {
             qb.andWhere(
                 '(listing.title ILIKE :q OR listing.description ILIKE :q)',
@@ -96,31 +102,28 @@ export class ListingsService {
             );
         }
 
-        // Geo search (requires PostGIS installed + lat/lon in JSONB)
-        if (filters.lat && filters.lon && filters.radiusKm) {
+        if (filters.lat && filters.lon && filters.radiusKm && await this.isPostGisInstalled()) {
             qb.andWhere(
                 `ST_DWithin(
-        ST_SetSRID(ST_MakePoint(
-          CAST(listing.location->>'lon' AS DOUBLE PRECISION),
-          CAST(listing.location->>'lat' AS DOUBLE PRECISION)
-        ), 4326)::geography,
-        ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography,
-        :radiusMeters
-      )`,
+                    ST_SetSRID(ST_MakePoint(
+                        CAST(listing.location->>'lon' AS DOUBLE PRECISION),
+                        CAST(listing.location->>'lat' AS DOUBLE PRECISION)
+                    ), 4326)::geography,
+                    ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography,
+                    :radiusMeters
+                )`,
                 {
                     lat: filters.lat,
                     lon: filters.lon,
-                    radiusMeters: filters.radiusKm * 1000, // convert km → meters
+                    radiusMeters: filters.radiusKm * 1000,
                 },
             );
         }
 
-        // Pagination
         const page = filters.page || 1;
         const limit = filters.limit || 10;
         const skip = (page - 1) * limit;
 
-        // Sorting
         const sortBy = filters.sortBy || 'created_at';
         const order = filters.order || 'DESC';
 
@@ -129,7 +132,7 @@ export class ListingsService {
         const [items, total] = await qb.getManyAndCount();
 
         return {
-            data: items,
+            data: items.map(item => ListingMapper.toResponse(item)),
             meta: {
                 total,
                 page,
@@ -157,7 +160,7 @@ export class ListingsService {
     async updateStatus(
         id: string,
         dto: UpdateListingStatusDto,
-        adminUser: User, // pass the authenticated user
+        adminUser: User,
     ): Promise<ListingResponseDto> {
         if (adminUser.role !== 'admin') {
             throw new ForbiddenException('Only admins can update listing status');
@@ -183,58 +186,43 @@ export class ListingsService {
     ): Promise<ListingResponseDto> {
         const listing = await this.listingsRepository.findOne({
             where: { id: listingId },
-            relations: ['owner', 'media'], // Ensure media is loaded
+            relations: ['owner', 'media'],
         });
 
         if (!listing) throw new NotFoundException('Listing not found');
 
+        if (listing.owner.id !== user.id && user.role !== 'admin') {
+            throw new ForbiddenException('Not authorized to update media for this listing');
+        }
 
-        if (dto.mediaIds) {
-            const mediaList = await this.mediaRepository.find({
+        if (listing.media && listing.media.length > 0) {
+            for (const media of listing.media) {
+                media.listing = null;
+            }
+            await this.mediaRepository.save(listing.media);
+        }
+
+        if (dto.mediaIds && dto.mediaIds.length > 0) {
+            const newMedia = await this.mediaRepository.find({
                 where: { id: In(dto.mediaIds) },
                 relations: ['listing'],
             });
 
-            if (mediaList.some((m) => m.listing && m.listing.id !== listing.id)) {
-                throw new BadRequestException('Some media already assigned to another listing');
+            if (newMedia.length !== dto.mediaIds.length) {
+                throw new BadRequestException('Some media IDs were not found.');
             }
 
-            for (const media of mediaList) {
-                media.listing = listing;
+            const alreadyAssigned = newMedia.find(m => m.listing && m.listing.id !== listing.id);
+            if (alreadyAssigned) {
+                throw new BadRequestException(`Media ID ${alreadyAssigned.id} is already assigned to another listing.`);
             }
 
-            await this.mediaRepository.save(mediaList);
+            listing.media = newMedia;
+        } else {
+            listing.media = [];
         }
 
-        // Only owner or admin can modify media
-        if (listing.owner.id !== user.id && user.role !== 'admin') {
-            throw new ForbiddenException('Not authorized to update media');
-        }
-
-        // Disassociate existing media from this listing if not in the new mediaIds
-        if (listing.media) {
-            for (const existingMedia of listing.media) {
-                if (!dto.mediaIds?.includes(existingMedia.id)) {
-                    existingMedia.listing = null;
-                    await this.mediaRepository.save(existingMedia);
-                }
-            }
-        }
-
-        // Associate new media with the listing
-        const media: Media[] = [];
-        if (dto.mediaIds && dto.mediaIds.length > 0) {
-            const newMedia = await this.mediaRepository.findBy({ id: In(dto.mediaIds) });
-            media.push(...newMedia);
-        }
-        listing.media = media;
-
-        const saved = await this.listingsRepository.save(listing);
-        return ListingMapper.toResponse(saved);
+        const savedListing = await this.listingsRepository.save(listing);
+        return ListingMapper.toResponse(savedListing);
     }
-
-
-
-
-
 }

@@ -17,8 +17,8 @@ export class BookingsController {
     }
 
     @Get()
-    async listUserBookings(@CurrentUser() user: User) {
-        return this.bookingsService.listUserBookings(user);
+    async findUserBookings(@CurrentUser() user: User) {
+        return this.bookingsService.findUserBookings(user);
     }
 
     @Patch(':id/status')
@@ -28,5 +28,10 @@ export class BookingsController {
         @CurrentUser() user: User,
     ) {
         return this.bookingsService.updateStatus(id, dto, user);
+    }
+
+    @Get('seller')
+    getSellerBookings(@CurrentUser() user: User) {
+        return this.bookingsService.findSellerBookings(user);
     }
 }

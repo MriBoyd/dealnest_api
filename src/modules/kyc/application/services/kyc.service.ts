@@ -1,15 +1,14 @@
-// src/modules/kyc/application/services/kyc.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { Kyc } from '../../domain/entities/kyc.entity';
 import { User, KycStatus } from '../../../user/domain/entities/user.entity';
-import { Multer } from 'multer';
 import { UserResponseDto } from 'src/modules/user/presentation/dto/user-response.dto';
 import { UserMapper } from 'src/modules/user/application/mappers/user.mapper';
 import { KycDetailsResponseDto } from 'src/modules/kyc/presentation/dto/kyc-details-response.dto';
 import { FilterKycDto } from '../../presentation/dto/filter-kyc.dto';
 import { PaginatedKycSubmissionResponseDto } from '../../presentation/dto/paginated-kyc-submission-response.dto';
+import Multer from 'multer'; 
 
 @Injectable()
 export class KycService {
@@ -19,8 +18,11 @@ export class KycService {
         private readonly dataSource: DataSource,
     ) { }
 
-    async uploadDocs(user: User, files: Multer.File[]): Promise<UserResponseDto> {
-        // files order: [gov_id_front, gov_id_back, selfie]
+    async uploadDocs(user: User, files: {
+        gov_id_front: Multer.File;
+        gov_id_back: Multer.File;
+        selfie: Multer.File;
+    }): Promise<UserResponseDto> {
         return this.dataSource.transaction(async (transactionalEntityManager) => {
             let kyc = await transactionalEntityManager.findOne(Kyc, { where: { user: { id: user.id } } });
 
@@ -28,22 +30,26 @@ export class KycService {
                 kyc = transactionalEntityManager.create(Kyc, { user });
             }
 
-            // Update KYC document data
-            kyc.gov_id_front_filename = files[0]?.originalname;
-            kyc.gov_id_front_mimetype = files[0]?.mimetype;
-            kyc.gov_id_front_data = files[0]?.buffer;
-            kyc.gov_id_back_filename = files[1]?.originalname;
-            kyc.gov_id_back_mimetype = files[1]?.mimetype;
-            kyc.gov_id_back_data = files[1]?.buffer;
-            kyc.selfie_filename = files[2]?.originalname;
-            kyc.selfie_mimetype = files[2]?.mimetype;
-            kyc.selfie_data = files[2]?.buffer;
+            // Destructure and update from named files
+            const { gov_id_front, gov_id_back, selfie } = files;
+
+            kyc.gov_id_front_filename = gov_id_front.originalname;
+            kyc.gov_id_front_mimetype = gov_id_front.mimetype;
+            kyc.gov_id_front_data = gov_id_front.buffer;
+
+            kyc.gov_id_back_filename = gov_id_back.originalname;
+            kyc.gov_id_back_mimetype = gov_id_back.mimetype;
+            kyc.gov_id_back_data = gov_id_back.buffer;
+
+            kyc.selfie_filename = selfie.originalname;
+            kyc.selfie_mimetype = selfie.mimetype;
+            kyc.selfie_data = selfie.buffer;
 
             user.kyc_status = KycStatus.PENDING;
             user.kyc_notes = null; // Clear previous notes on new submission
 
             const updatedUser = await transactionalEntityManager.save(User, user);
-            await transactionalEntityManager.save(Kyc, kyc); // This will now insert or update
+            await transactionalEntityManager.save(Kyc, kyc);
 
             return UserMapper.toResponse(updatedUser);
         });
