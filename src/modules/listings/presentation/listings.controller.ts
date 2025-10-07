@@ -19,6 +19,8 @@ import { UpdateListingStatusDto } from './dto/update-listing-status.dto';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { User } from 'src/modules/user/domain/entities/user.entity';
 import { UpdateListingMediaDto } from './dto/update-listing-media.dto';
+import { Roles } from 'src/common/decorators/roles.decorator';
+import { Role } from 'src/common/enums/role.enum';
 
 @Controller('listings')
 @UseGuards(JwtAuthGuard)
@@ -26,6 +28,7 @@ export class ListingsController {
   constructor(private readonly listingsService: ListingsService) {}
 
   @Post()
+  @Roles(Role.HOMEOWNER, Role.CORPORATE_CLIENT, Role.PROFESSIONAL_SELLER)
   async create(@Body() dto: CreateListingDto, @Request() req) {
     return this.listingsService.create(dto, req.user);
   }
@@ -43,6 +46,7 @@ export class ListingsController {
   }
 
   @Patch(':id/status')
+  @Roles(Role.ADMIN)
   async updateStatus(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateListingStatusDto,
@@ -52,6 +56,7 @@ export class ListingsController {
   }
 
   @Patch(':id/media')
+  @Roles(Role.HOMEOWNER, Role.CORPORATE_CLIENT, Role.PROFESSIONAL_SELLER)
   async updateMedia(
     @Param('id') id: string,
     @Body() dto: UpdateListingMediaDto,

@@ -4,8 +4,11 @@ import { UpdateListingStatusDto } from './dto/update-listing-status.dto';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 import { User } from 'src/modules/user/domain/entities/user.entity';
 import { JwtAuthGuard } from 'src/modules/auth/infrastructure/guards/jwt-auth.guard';
+import { Role } from 'src/common/enums/role.enum';
+import { Roles } from 'src/common/decorators/roles.decorator';
 
 @Controller('admin/listings')
+@Roles(Role.ADMIN)
 @UseGuards(JwtAuthGuard)
 export class AdminListingsController {
   constructor(private readonly adminListingsService: AdminListingsService) {}
