@@ -4,19 +4,21 @@ import { JwtAuthGuard } from 'src/modules/auth/infrastructure/guards/jwt-auth.gu
 import { BookingsService } from 'src/modules/bookings/application/services/bookings.service';
 import { UpdateBookingStatusDto } from 'src/modules/bookings/presentation/dto/update-booking-status.dto';
 
-
 @Controller('admin/bookings')
 @UseGuards(JwtAuthGuard)
 export class AdminBookingsController {
-    constructor(private readonly bookingsService: BookingsService) { }
+  constructor(private readonly bookingsService: BookingsService) {}
 
-    @Get()
-    async listAll() {
-        return this.bookingsService.listAllBookings();
-    }
+  @Get()
+  async listAll() {
+    return this.bookingsService.listAllBookings();
+  }
 
-    @Patch(':id/status')
-    async updateStatus(@Param('id') id: string, @Body() dto: UpdateBookingStatusDto) {
-        return this.bookingsService.adminUpdateStatus(id, dto);
-    }
+  @Patch(':id/status')
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateBookingStatusDto,
+  ) {
+    return this.bookingsService.adminUpdateStatus(id, dto);
+  }
 }

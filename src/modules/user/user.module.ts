@@ -8,14 +8,14 @@ import { MediaModule } from '../media/media.module';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
-	providers: [UserService],
-	exports: [UserService, TypeOrmModule],
-	controllers: [UserController],
-	imports: [
-		TypeOrmModule.forFeature([User]),
-		forwardRef(() => AuthModule),
-		MediaModule,
-		ConfigModule,
-	],
+  providers: [UserService],
+  exports: [UserService, TypeOrmModule],
+  controllers: [UserController],
+  imports: [
+    TypeOrmModule.forFeature([User]),
+    forwardRef(() => AuthModule),
+    MediaModule,
+    ConfigModule,
+  ],
 })
-export class UserModule { }
+export class UserModule {}

@@ -1,15 +1,14 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { AuthService } from './application/services/auth.service';
-import { UserModule } from '../user/user.module';
 import { AuthController } from './presentation/auth.controller';
+import { UserModule } from '../user/user.module';
 import { PassportModule } from '@nestjs/passport';
-import { LocalStrategy } from './infrastructure/strategies/local.strategy';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { LocalStrategy } from './infrastructure/strategies/local.strategy';
 import { JwtStrategy } from './infrastructure/strategies/jwt.strategy';
-import { EmailService } from './infrastructure/adapters/email.service';
-import { ThrottlerModule } from '@nestjs/throttler';
 import { GoogleStrategy } from './infrastructure/strategies/google.strategy';
+import { EmailService } from './infrastructure/adapters/email.service';
 
 @Module({
   imports: [
@@ -18,25 +17,21 @@ import { GoogleStrategy } from './infrastructure/strategies/google.strategy';
     ConfigModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get<string>('JWT_SECRET'),
-        signOptions: { expiresIn: configService.get<string>('JWT_EXPIRES_IN', '1h') },
+        signOptions: { expiresIn: '1d' },
       }),
-    }),
-    ThrottlerModule.forRoot({
-      throttlers: [
-        {
-          ttl: 60000,
-          limit: 10,
-        },
-      ],
+      inject: [ConfigService],
     }),
   ],
-  providers: [AuthService, LocalStrategy, JwtStrategy, EmailService, GoogleStrategy],
+  providers: [
+    AuthService,
+    LocalStrategy,
+    JwtStrategy,
+    GoogleStrategy,
+    EmailService,
+  ],
   controllers: [AuthController],
-  exports: [EmailService],
-
-
+  exports: [AuthService, JwtModule, EmailService],
 })
-export class AuthModule { }
+export class AuthModule {}

@@ -6,9 +6,9 @@ import { Kyc } from './domain/entities/kyc.entity';
 import { UserModule } from '../user/user.module';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Kyc]), UserModule],
-    providers: [KycService],
-    exports: [KycService],
-    controllers: [KycController],
+  imports: [TypeOrmModule.forFeature([Kyc]), UserModule],
+  providers: [KycService],
+  exports: [KycService],
+  controllers: [KycController],
 })
-export class KycModule { }
+export class KycModule {}

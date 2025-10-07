@@ -11,19 +11,23 @@ import { MediaModule } from './modules/media/media.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { BookingsModule } from './modules/bookings/bookings.module';
 import { KycModule } from './modules/kyc/kyc.module';
+import { MessagingModule } from './modules/messaging/messaging.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
+    EventEmitterModule.forRoot(),
     ConfigModule.forRoot({
       isGlobal: true, // Make ConfigService available globally
     }),
     SwaggerSyncModule.register({
-      apiKey: 'PMAK-68c91efe594c280001e8a3ec-cc11deccd20f33b15aabd532040b9edfff',
+      apiKey:
+        'PMAK-68c91efe594c280001e8a3ec-cc11deccd20f33b15aabd532040b9edfff',
       swaggerPath: 'api',
       baseUrl: 'http://localhost:8000',
       runTest: true,
       collectionName: 'Dealnest',
-
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -46,8 +50,10 @@ import { KycModule } from './modules/kyc/kyc.module';
     AdminModule,
     BookingsModule,
     KycModule,
+    MessagingModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

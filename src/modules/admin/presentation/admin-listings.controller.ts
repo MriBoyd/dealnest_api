@@ -8,19 +8,19 @@ import { JwtAuthGuard } from 'src/modules/auth/infrastructure/guards/jwt-auth.gu
 @Controller('admin/listings')
 @UseGuards(JwtAuthGuard)
 export class AdminListingsController {
-    constructor(private readonly adminListingsService: AdminListingsService) { }
+  constructor(private readonly adminListingsService: AdminListingsService) {}
 
-    @Get()
-    async listAllForReview() {
-        return this.adminListingsService.listAllForReview();
-    }
+  @Get()
+  async listAllForReview() {
+    return this.adminListingsService.listAllForReview();
+  }
 
-    @Patch(':id/status')
-    async updateStatus(
-        @Param('id') id: string,
-        @Body() dto: UpdateListingStatusDto,
-        @CurrentUser() user: User,
-    ) {
-        return this.adminListingsService.updateStatus(id, dto, user);
-    }
+  @Patch(':id/status')
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateListingStatusDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.adminListingsService.updateStatus(id, dto, user);
+  }
 }

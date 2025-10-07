@@ -2,13 +2,13 @@
 import { KycSubmissionResponseDto } from './kyc-submission-response.dto';
 
 class PaginationMeta {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
 export class PaginatedKycSubmissionResponseDto {
-    data: KycSubmissionResponseDto[];
-    meta: PaginationMeta;
+  data: KycSubmissionResponseDto[];
+  meta: PaginationMeta;
 }

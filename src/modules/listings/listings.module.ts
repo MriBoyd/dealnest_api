@@ -10,6 +10,5 @@ import { Media } from '../media/domain/entities/media.entity';
   imports: [TypeOrmModule.forFeature([Listing, Media]), MediaModule],
   controllers: [ListingsController],
   providers: [ListingsService],
-
 })
-export class ListingsModule { }
+export class ListingsModule {}

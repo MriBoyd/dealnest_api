@@ -4,7 +4,10 @@ import { SwaggerSyncService } from 'nestjs-swagger-sync';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService, private readonly swaggerSyncService: SwaggerSyncService) { }
+  constructor(
+    private readonly appService: AppService,
+    private readonly swaggerSyncService: SwaggerSyncService,
+  ) {}
 
   @Get()
   getHello(): string {

@@ -2,7 +2,7 @@
 import { IsArray, IsUUID } from 'class-validator';
 
 export class UpdateListingMediaDto {
-    @IsArray()
-    @IsUUID('all', { each: true })
-    mediaIds: string[];
+  @IsArray()
+  @IsUUID('all', { each: true })
+  mediaIds: string[];
 }

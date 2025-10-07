@@ -14,14 +14,18 @@ import { KycModule } from '../kyc/kyc.module';
 import { Kyc } from '../kyc/domain/entities/kyc.entity';
 
 @Module({
-    imports: [
-        TypeOrmModule.forFeature([AdminAction, Listing, Booking, Kyc]),
-        UserModule,
-        ListingsModule,
-        BookingsModule,
-        KycModule
-    ],
-    controllers: [AdminListingsController, AdminBookingsController, AdminKycController],
-    providers: [AdminListingsService],
+  imports: [
+    TypeOrmModule.forFeature([AdminAction, Listing, Booking, Kyc]),
+    UserModule,
+    ListingsModule,
+    BookingsModule,
+    KycModule,
+  ],
+  controllers: [
+    AdminListingsController,
+    AdminBookingsController,
+    AdminKycController,
+  ],
+  providers: [AdminListingsService],
 })
-export class AdminModule { }
+export class AdminModule {}

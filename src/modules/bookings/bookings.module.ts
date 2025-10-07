@@ -6,9 +6,9 @@ import { Booking } from './domain/entities/booking.entity';
 import { Listing } from '../listings/domain/entities/listing.entity';
 
 @Module({
-    imports: [TypeOrmModule.forFeature([Booking, Listing])],
-    exports: [BookingsService],
-    controllers: [BookingsController],
-    providers: [BookingsService],
+  imports: [TypeOrmModule.forFeature([Booking, Listing])],
+  exports: [BookingsService],
+  controllers: [BookingsController],
+  providers: [BookingsService],
 })
 export class BookingsModule {}
