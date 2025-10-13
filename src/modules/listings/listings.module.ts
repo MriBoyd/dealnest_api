@@ -11,4 +11,4 @@ import { Media } from '../media/domain/entities/media.entity';
   controllers: [ListingsController],
   providers: [ListingsService],
 })
-export class ListingsModule {}
+export class ListingsModule { }

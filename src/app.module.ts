@@ -14,6 +14,8 @@ import { KycModule } from './modules/kyc/kyc.module';
 import { MessagingModule } from './modules/messaging/messaging.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { AdsModule } from './modules/ads/ads.module';
+import { ReviewsModule } from './modules/reviews/reviews.module';
 
 @Module({
   imports: [
@@ -52,6 +54,8 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     KycModule,
     MessagingModule,
     NotificationsModule,
+    AdsModule,
+    ReviewsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

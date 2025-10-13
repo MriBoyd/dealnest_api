@@ -1,6 +1,7 @@
 import { Listing } from '../../domain/entities/listing.entity';
 import { ListingResponseDto } from '../../presentation/dto/listing-response.dto';
 import { UserMapper } from '../../../user/application/mappers/user.mapper';
+import { MediaResponseDto } from 'src/modules/media/presentation/dto/media-response.dto';
 
 export class ListingMapper {
   static toResponse(listing: Listing): ListingResponseDto {
@@ -19,12 +20,13 @@ export class ListingMapper {
       pet_policy: listing.pet_policy,
       nearby: listing.nearby,
       extra_costs: listing.extra_costs,
-      media:
-        listing.media?.map((m) => ({
+      media: (listing.media?.map(
+        (m): MediaResponseDto => ({
           id: m.id,
           filename: m.filename,
           mimetype: m.mimetype,
-        })) ?? [],
+        }),
+      ) ?? []) as MediaResponseDto[],
       status: listing.status,
       verification_level: listing.verification_level,
       created_at: listing.created_at,
