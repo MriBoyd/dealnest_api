@@ -2,8 +2,8 @@ import { Controller, Post, Get, Param, Body, UseGuards } from '@nestjs/common';
 import { ReviewsService } from '../application/services/reviews.service';
 import { User } from '../../user/domain/entities/user.entity';
 import { ReviewTargetType } from '../domain/entities/review.entity';
-import { JwtAuthGuard } from 'src/modules/auth/infrastructure/guards/jwt-auth.guard';
-import { CurrentUser } from 'src/common/decorators/current-user.decorator';
+import { JwtAuthGuard } from '../../auth/infrastructure/guards/jwt-auth.guard';
+import { CurrentUser } from '../../../common/decorators/current-user.decorator';
 
 @Controller('reviews')
 @UseGuards(JwtAuthGuard)

@@ -10,7 +10,7 @@ import {
 import { User } from '../../../user/domain/entities/user.entity';
 import { Vertical } from '../enums/vertical.enum';
 import { ListingStatus } from '../enums/listing-status.enum';
-import { Media } from 'src/modules/media/domain/entities/media.entity';
+import { Media } from '../../../media/domain/entities/media.entity';
 
 export enum ListingVerificationLevel {
   NONE = 'none',

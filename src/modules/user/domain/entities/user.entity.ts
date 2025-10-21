@@ -1,7 +1,7 @@
 import { Exclude, Expose } from 'class-transformer';
-import { Role } from 'src/common/enums/role.enum';
-import { Kyc } from 'src/modules/kyc/domain/entities/kyc.entity';
-import { Listing } from 'src/modules/listings/domain/entities/listing.entity';
+import { Role } from '../../../../common/enums/role.enum';
+import { Kyc } from '../../../kyc/domain/entities/kyc.entity';
+import { Listing } from '../../../listings/domain/entities/listing.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,

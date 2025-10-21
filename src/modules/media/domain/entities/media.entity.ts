@@ -1,4 +1,4 @@
-import { Listing } from 'src/modules/listings/domain/entities/listing.entity';
+import { Listing } from '../../../listings/domain/entities/listing.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
