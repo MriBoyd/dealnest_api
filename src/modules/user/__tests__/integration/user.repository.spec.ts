@@ -37,7 +37,8 @@ describe('UserService (Integration)', () => {
 
 	beforeEach(async () => {
 		// Clear the users table before each test
-		await service['userRepo'].clear();
+		const repository = service['userRepo'];
+		await repository.query('TRUNCATE "users" RESTART IDENTITY CASCADE;');
 	});
 
 	it('should create a user and save to the database', async () => {

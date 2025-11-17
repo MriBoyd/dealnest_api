@@ -3,6 +3,7 @@ import {
 	ConflictException,
 	Injectable,
 	NotFoundException,
+	UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 
@@ -167,7 +168,7 @@ export class UserService {
 		if (!user) {
 			throw new NotFoundException(`User with id ${id} not found`);
 		}
-		return plainToInstance(User, user, { excludeExtraneousValues: true });
+		return user;
 	}
 
 	async findUserByEmail(email: string): Promise<User | null> {
@@ -247,7 +248,7 @@ export class UserService {
 			throw new BadRequestException('User does not have a password set (social login?)');
 
 		const isValid = await bcrypt.compare(dto.current_password, user.password_hash);
-		if (!isValid) throw new BadRequestException('Current password is incorrect');
+		if (!isValid) throw new UnauthorizedException('Current password is incorrect');
 
 		const newHash = await bcrypt.hash(dto.new_password, 10);
 		user.password_hash = newHash;

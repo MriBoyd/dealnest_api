@@ -35,6 +35,7 @@ describe('UserService', () => {
   };
 
   beforeEach(async () => {
+    jest.clearAllMocks();
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         UserService,
@@ -91,6 +92,7 @@ describe('UserService', () => {
     });
 
     it('should throw BadRequestException for short password', async () => {
+      mockUserRepo.findOne.mockResolvedValue(null);
       await expect(
         service.createUser({ ...createUserDto, password: '123' }),
       ).rejects.toThrow(BadRequestException);
