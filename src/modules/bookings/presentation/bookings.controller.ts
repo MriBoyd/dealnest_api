@@ -17,7 +17,7 @@ import { JwtAuthGuard } from 'src/modules/auth/infrastructure/guards/jwt-auth.gu
 @Controller('bookings')
 @UseGuards(JwtAuthGuard)
 export class BookingsController {
-  constructor(private readonly bookingsService: BookingsService) {}
+  constructor(private readonly bookingsService: BookingsService) { }
 
   @Post()
   async create(@Body() dto: CreateBookingDto, @CurrentUser() user: User) {

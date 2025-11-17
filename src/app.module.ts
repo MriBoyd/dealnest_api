@@ -21,7 +21,7 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
   imports: [
     EventEmitterModule.forRoot(),
     ConfigModule.forRoot({
-      isGlobal: true, // Make ConfigService available globally
+      isGlobal: true,
     }),
     SwaggerSyncModule.register({
       apiKey:

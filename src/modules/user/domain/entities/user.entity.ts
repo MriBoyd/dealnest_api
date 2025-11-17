@@ -24,7 +24,6 @@ export class User {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  // TODO: Store profile picture in a dedicated file storage service like S3 instead of the database.
   @Column({ type: 'bytea', nullable: true })
   profile_pic_data?: Buffer;
 

@@ -3,7 +3,6 @@ import {
 	ConflictException,
 	Injectable,
 	NotFoundException,
-	UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 
@@ -12,14 +11,14 @@ import { Repository } from 'typeorm';
 import { User } from '../../domain/entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomBytes } from 'crypto';
-import { EmailService } from 'src/modules/auth/infrastructure/adapters/email.service';
+import { EmailService } from '../../../auth/infrastructure/adapters/email.service';
 import { plainToInstance } from 'class-transformer';
 import { UserResponseDto } from '../../presentation/dto/user-response.dto';
 import { UserMapper } from '../mappers/user.mapper';
 import {
 	DEFAULT_PROFILE_PIC_BASE64,
 	DEFAULT_PROFILE_PIC_MIMETYPE,
-} from 'src/config/defaults';
+} from '../../../../config/defaults';
 import { UpdateProfileDto } from '../../presentation/dto/update-profile.dto';
 import { ChangePasswordDto } from '../../presentation/dto/change-password.dto';
 
@@ -134,7 +133,6 @@ export class UserService {
 			throw new BadRequestException('Email already verified');
 		}
 
-		// Rate limiting: allow only once every 10 minutes
 		const now = new Date();
 		if (
 			user.last_verification_email_sent &&
@@ -144,7 +142,6 @@ export class UserService {
 			throw new BadRequestException('Please wait before requesting again');
 		}
 
-		// Generate token
 		const token = randomBytes(32).toString('hex');
 		user.email_verification_token = token;
 		user.email_verification_expires = new Date(Date.now() + 1000 * 60 * 60); // 1 hour
@@ -191,7 +188,6 @@ export class UserService {
 		const user = await this.userRepo.findOne({ where: { id: userId } });
 		if (!user) throw new NotFoundException('User not found');
 
-		// convert base64 string to Buffer
 		const buffer = Buffer.from(base64, 'base64');
 
 		user.profile_pic_mimetype = mimetype;
@@ -222,7 +218,6 @@ export class UserService {
 		const user = await this.userRepo.findOne({ where: { id: userId } });
 		if (!user) throw new NotFoundException('User not found');
 
-		// Handle base64 profile picture upload
 		if (dto.profile_pic_base64 && dto.profile_pic_mimetype) {
 			const buffer = Buffer.from(dto.profile_pic_base64, 'base64');
 			user.profile_pic_data = buffer;
@@ -246,13 +241,13 @@ export class UserService {
 
 	async changePassword(userId: string, dto: ChangePasswordDto): Promise<{ message: string }> {
 		const user = await this.userRepo.findOne({ where: { id: userId } });
-		if (!user) throw new UnauthorizedException('User not found');
+		if (!user) throw new NotFoundException('User not found');
 
 		if (!user.password_hash)
 			throw new BadRequestException('User does not have a password set (social login?)');
 
 		const isValid = await bcrypt.compare(dto.current_password, user.password_hash);
-		if (!isValid) throw new UnauthorizedException('Current password is incorrect');
+		if (!isValid) throw new BadRequestException('Current password is incorrect');
 
 		const newHash = await bcrypt.hash(dto.new_password, 10);
 		user.password_hash = newHash;

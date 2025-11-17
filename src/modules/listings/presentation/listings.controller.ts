@@ -50,7 +50,7 @@ export class ListingsController {
   async updateStatus(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: UpdateListingStatusDto,
-    @CurrentUser() user: User, // your custom decorator
+    @CurrentUser() user: User,
   ) {
     return this.listingsService.updateStatus(id, dto, user);
   }
