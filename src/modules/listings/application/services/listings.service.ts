@@ -13,8 +13,8 @@ import { ListingMapper } from '../mappers/listing.mapper';
 import { ListingResponseDto } from '../../presentation/dto/listing-response.dto';
 import { FilterListingsDto } from '../../presentation/dto/filter-listings.dto';
 import { UpdateListingStatusDto } from '../../presentation/dto/update-listing-status.dto';
-import { Media } from 'src/modules/media/domain/entities/media.entity';
 import { UpdateListingMediaDto } from '../../presentation/dto/update-listing-media.dto';
+import { ListingImage } from '../../../media/domain/entities/media.entity';
 
 @Injectable()
 export class ListingsService {
@@ -23,8 +23,8 @@ export class ListingsService {
   constructor(
     @InjectRepository(Listing)
     private readonly listingsRepository: Repository<Listing>,
-    @InjectRepository(Media)
-    private readonly mediaRepository: Repository<Media>,
+    @InjectRepository(ListingImage)
+    private readonly imagesRepository: Repository<ListingImage>,
     @InjectDataSource()
     private readonly dataSource: DataSource,
   ) {}
@@ -44,38 +44,39 @@ export class ListingsService {
     owner: User,
   ): Promise<ListingResponseDto> {
     const listing = this.listingsRepository.create({
-      ...dto,
       owner,
+      title: dto.title,
+      description: dto.description,
+      price: dto.price,
+      currency: dto.currency ?? 'ETB',
+      city: dto.city,
+      address: dto.address,
+      transaction_type: dto.transaction_type,
+      price_unit: dto.price_unit,
     });
 
     const saved = await this.listingsRepository.save(listing);
 
-    if (dto.mediaIds) {
-      const mediaList = await this.mediaRepository.find({
-        where: { id: In(dto.mediaIds) },
+    if (dto.imageIds && dto.imageIds.length) {
+      const images = await this.imagesRepository.find({
+        where: { id: In(dto.imageIds) },
         relations: ['listing'],
       });
-
-      if (!mediaList.length) {
-        throw new BadRequestException('No media found for given group id');
+      if (!images.length) {
+        throw new BadRequestException('No images found for provided ids');
       }
-
-      if (mediaList.some((m) => m.listing)) {
-        throw new BadRequestException(
-          'Some media already assigned to another listing',
-        );
+      if (images.some((img) => img.listing)) {
+        throw new BadRequestException('Some images already linked to another listing');
       }
-
-      for (const media of mediaList) {
-        media.listing = saved;
+      for (const img of images) {
+        img.listing = saved;
       }
-
-      await this.mediaRepository.save(mediaList);
+      await this.imagesRepository.save(images);
     }
 
     const updatedListing = await this.listingsRepository.findOne({
       where: { id: saved.id },
-      relations: ['media', 'owner'],
+      relations: ['images', 'owner', 'category', 'realEstateAttributes', 'vehicleAttributes'],
     });
 
     if (!updatedListing) {
@@ -91,18 +92,21 @@ export class ListingsService {
     const qb = this.listingsRepository
       .createQueryBuilder('listing')
       .leftJoinAndSelect('listing.owner', 'owner')
-      .leftJoinAndSelect('listing.media', 'media');
+      .leftJoinAndSelect('listing.images', 'images')
+      .leftJoinAndSelect('listing.category', 'category');
 
     if (filters.city) {
-      qb.andWhere(`listing.location->>'city' ILIKE :city`, {
-        city: `%${filters.city}%`,
-      });
+      qb.andWhere('listing.city ILIKE :city', { city: `%${filters.city}%` });
+    }
+    if (filters.categoryId) {
+      qb.andWhere('listing.categoryId = :categoryId', { categoryId: filters.categoryId });
     }
 
-    if (filters.vertical) {
-      qb.andWhere('listing.vertical = :vertical', {
-        vertical: filters.vertical,
-      });
+    if (filters.transaction_type) {
+      qb.andWhere('listing.transaction_type = :transaction_type', { transaction_type: filters.transaction_type });
+    }
+    if (filters.price_unit) {
+      qb.andWhere('listing.price_unit = :price_unit', { price_unit: filters.price_unit });
     }
 
     if (filters.minPrice) {
@@ -118,28 +122,7 @@ export class ListingsService {
       });
     }
 
-    if (
-      filters.lat &&
-      filters.lon &&
-      filters.radiusKm &&
-      (await this.isPostGisInstalled())
-    ) {
-      qb.andWhere(
-        `ST_DWithin(
-                    ST_SetSRID(ST_MakePoint(
-                        CAST(listing.location->>'lon' AS DOUBLE PRECISION),
-                        CAST(listing.location->>'lat' AS DOUBLE PRECISION)
-                    ), 4326)::geography,
-                    ST_SetSRID(ST_MakePoint(:lon, :lat), 4326)::geography,
-                    :radiusMeters
-                )`,
-        {
-          lat: filters.lat,
-          lon: filters.lon,
-          radiusMeters: filters.radiusKm * 1000,
-        },
-      );
-    }
+    // Geo search removed: listing no longer stores geo JSON (lat/lon).
 
     const page = filters.page || 1;
     const limit = filters.limit || 10;
@@ -168,7 +151,7 @@ export class ListingsService {
   async findById(id: string): Promise<ListingResponseDto> {
     const listing = await this.listingsRepository.findOne({
       where: { id },
-      relations: ['media', 'owner'],
+      relations: ['images', 'owner', 'category', 'realEstateAttributes', 'vehicleAttributes'],
     });
 
     if (!listing) {
@@ -207,7 +190,7 @@ export class ListingsService {
   ): Promise<ListingResponseDto> {
     const listing = await this.listingsRepository.findOne({
       where: { id: listingId },
-      relations: ['owner', 'media'],
+      relations: ['owner', 'images'],
     });
 
     if (!listing) throw new NotFoundException('Listing not found');
@@ -218,35 +201,27 @@ export class ListingsService {
       );
     }
 
-    if (listing.media && listing.media.length > 0) {
-      for (const media of listing.media) {
-        media.listing = null;
-      }
-      await this.mediaRepository.save(listing.media);
-    }
+    // To replace images we simply ignore existing ones here; deletion handled separately if needed.
 
-    if (dto.mediaIds && dto.mediaIds.length > 0) {
-      const newMedia = await this.mediaRepository.find({
-        where: { id: In(dto.mediaIds) },
+    if (dto.imageIds && dto.imageIds.length > 0) {
+      const newImages = await this.imagesRepository.find({
+        where: { id: In(dto.imageIds) },
         relations: ['listing'],
       });
-
-      if (newMedia.length !== dto.mediaIds.length) {
-        throw new BadRequestException('Some media IDs were not found.');
+      if (newImages.length !== dto.imageIds.length) {
+        throw new BadRequestException('Some image IDs were not found.');
       }
-
-      const alreadyAssigned = newMedia.find(
-        (m) => m.listing && m.listing.id !== listing.id,
+      const alreadyAssigned = newImages.find(
+        (img) => img.listing && img.listing.id !== listing.id,
       );
       if (alreadyAssigned) {
         throw new BadRequestException(
-          `Media ID ${alreadyAssigned.id} is already assigned to another listing.`,
+          `Image ID ${alreadyAssigned.id} is already assigned to another listing.`,
         );
       }
-
-      listing.media = newMedia;
+      listing.images = newImages;
     } else {
-      listing.media = [];
+      listing.images = [];
     }
 
     const savedListing = await this.listingsRepository.save(listing);

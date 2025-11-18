@@ -76,20 +76,30 @@ All endpoints require JWT.
 All endpoints require JWT unless noted.
 
 ### POST `/listings`
-- Roles: `homeowner`, `corporate_client`, `professional_seller`
-- Body (CreateListingDto):
-  - `vertical` (enum Vertical), `title`, `description?`, `price`, `currency?` (default ETB),
-  - `location?` { `city?`, `subcity?`, `lat?` [-90..90], `lon?` [-180..180] },
-  - `available_from?`, `square_meters?`, `amenities?[]`, `pet_policy?`, `nearby?[]`,
-  - `extra_costs?[]` [{ `name`, `amount>=0` }], `mediaIds?` (UUID[])
-- Response: listing resource
+ Roles: `homeowner`, `corporate_client`, `professional_seller`
+ Body (CreateListingDto):
+  - `title` (string, required)
+  - `description?` (string)
+  - `price` (number, required)
+  - `currency?` (string, default `ETB`)
+  - `transaction_type` (enum TransactionType: `rent|sale|lease|exchange`, required)
+  - `price_unit` (enum PriceUnit: e.g. `total|per_month|per_square_meter`, required)
+  - `city` (string, required)
+  - `address` (string, required)
+  - `imageIds?` (number[]; previously `mediaIds` UUID[])
+ Response: listing resource (images metadata, category & attributes if present)
 
 ### GET `/listings`
-- Query (FilterListingsDto): `city?`, `vertical?`, `minPrice?`, `maxPrice?`, `q?`,
+ Query (FilterListingsDto):
+  - `city?`
+  - `categoryId?`
+  - `transaction_type?`
+  - `price_unit?`
+  - `minPrice?`, `maxPrice?`
+  - `q?` (search title/description)
   - pagination: `page>=1` (default 1), `limit>=1` (default 10)
   - sorting: `sortBy` in `price|created_at` (default `created_at`), `order` in `ASC|DESC` (default `DESC`)
-  - geo: `lat?`, `lon?`, `radiusKm?`
-- Response: paginated list (implementation specific)
+ Response: paginated list of listings
 
 ### GET `/listings/:id`
 - Param: `id` UUID
@@ -102,7 +112,7 @@ All endpoints require JWT unless noted.
 
 ### PATCH `/listings/:id/media`
 - Roles: `homeowner|corporate_client|professional_seller`
-- Body (UpdateListingMediaDto): `mediaIds: UUID[]`
+- Body (UpdateListingMediaDto): `imageIds: number[]` (replaces listing's image set)
 
 ## Bookings
 
@@ -114,16 +124,23 @@ All endpoints require JWT.
 ### GET `/bookings`
 - Returns bookings for current user
 
+### GET `/bookings/:id`
+- Returns detail for the book id
+
 ### PATCH `/bookings/:id/status`
 - Body (UpdateBookingStatusDto): `status` (enum BookingStatus)
 
 ### GET `/bookings/seller`
 - Returns bookings for current seller
 
+### PATCH `/bookings/:id/cancel`
+- Returns cancel message
+
 ### Admin Bookings
 - Base: `/admin/bookings` (JWT + Role: admin)
   - GET `/admin/bookings`
   - PATCH `/admin/bookings/:id/status` (body: UpdateBookingStatusDto)
+
 
 ## Reviews
 

@@ -2,7 +2,8 @@ import type { Config } from 'jest';
 
 const config: Config = {
     moduleFileExtensions: ['js', 'json', 'ts'],
-    rootDir: '.',
+    // Set rootDir to project root (two levels up from this config file)
+    rootDir: '../../',
     testEnvironment: 'node',
     testRegex: '.*\\.spec\\.ts$',
     transform: {

@@ -1,36 +1,18 @@
 import { Listing } from '../../../listings/domain/entities/listing.entity';
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  ManyToOne,
-} from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 
-@Entity('media')
-export class Media {
-  @PrimaryGeneratedColumn('uuid')
-  id: string;
+@Entity('listing_images')
+export class ListingImage {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-  @Column({ type: 'bytea' })
-  data: Buffer;
+  @Column({ name: 'image_url' })
+  imageUrl: string;
 
-  @Column({ nullable: true })
-  filename?: string;
+  @Column({ name: 'is_primary', default: false })
+  isPrimary: boolean;
 
-  @ManyToOne(() => Listing, (listing) => listing.media, {
-    onDelete: 'CASCADE',
-    nullable: true,
-  })
-  listing: Listing | null;
-
-  @Column({ nullable: true })
-  mimetype?: string;
-
-  @CreateDateColumn()
-  created_at: Date;
-
-  @UpdateDateColumn()
-  updated_at: Date;
+  @ManyToOne(() => Listing, (listing) => listing.images, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'listing_id' })
+  listing: Listing;
 }

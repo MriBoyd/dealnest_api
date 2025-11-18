@@ -9,10 +9,13 @@ import { LocalStrategy } from './infrastructure/strategies/local.strategy';
 import { JwtStrategy } from './infrastructure/strategies/jwt.strategy';
 import { GoogleStrategy } from './infrastructure/strategies/google.strategy';
 import { EmailService } from './infrastructure/adapters/email.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from '../user/domain/entities/user.entity';
 
 @Module({
   imports: [
     forwardRef(() => UserModule),
+    TypeOrmModule.forFeature([User]),
     PassportModule,
     ConfigModule,
     JwtModule.registerAsync({

@@ -42,4 +42,20 @@ export class BookingsController {
   getSellerBookings(@CurrentUser() user: User) {
     return this.bookingsService.findSellerBookings(user);
   }
+
+  @Patch(':id/cancel')
+  async cancelBooking(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.bookingsService.cancelBooking(id, user);
+  }
+
+  @Get(':id')
+  async getBookingDetail(
+    @Param('id') id: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.bookingsService.getBookingDetail(id, user);
+  }
 }

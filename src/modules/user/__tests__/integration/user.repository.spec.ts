@@ -55,7 +55,7 @@ describe('UserService (Integration)', () => {
 
 		const dbUser = await service.findUserByEmail('test@example.com');
 		expect(dbUser).toBeDefined();
-		expect(dbUser.email).toEqual('test@example.com');
+		expect(dbUser!.email).toEqual('test@example.com');
 	});
 
 	it('should not create a user if email already exists', async () => {

@@ -16,6 +16,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AdsModule } from './modules/ads/ads.module';
 import { ReviewsModule } from './modules/reviews/reviews.module';
+import { AgentModule } from './modules/agent/agent.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
     NotificationsModule,
     AdsModule,
     ReviewsModule,
+    AgentModule,
   ],
   controllers: [AppController],
   providers: [AppService],

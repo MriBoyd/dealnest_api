@@ -2,10 +2,10 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MediaService } from './application/services/media.service';
 import { MediaController } from './presentation/media.controller';
-import { Media } from './domain/entities/media.entity';
+import { ListingImage } from './domain/entities/media.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Media])],
+  imports: [TypeOrmModule.forFeature([ListingImage])],
   providers: [MediaService],
   exports: [MediaService],
 

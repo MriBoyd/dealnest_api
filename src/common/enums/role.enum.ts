@@ -5,4 +5,5 @@ export enum Role {
   CORPORATE_CLIENT = 'corporate_client',
   ADVERTISER = 'advertiser',
   ADMIN = 'admin',
+  AGENT = 'agent',
 }

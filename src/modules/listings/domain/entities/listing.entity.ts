@@ -6,11 +6,17 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  JoinColumn,
+  OneToOne,
 } from 'typeorm';
 import { User } from '../../../user/domain/entities/user.entity';
-import { Vertical } from '../enums/vertical.enum';
 import { ListingStatus } from '../enums/listing-status.enum';
-import { Media } from '../../../media/domain/entities/media.entity';
+import { ListingImage } from '../../../media/domain/entities/media.entity';
+import { TransactionType } from '../enums/transaction-type.enum';
+import { PriceUnit } from '../enums/price-unit.enum';
+import { Category } from './category.entity';
+import { RealEstateAttribute } from './real-estate.entity';
+import { VehicleAttribute } from './vehicle.entity';
 
 export enum ListingVerificationLevel {
   NONE = 'none',
@@ -27,8 +33,10 @@ export class Listing {
   @ManyToOne(() => User, (user) => user.listings, { eager: true })
   owner: User;
 
-  @Column({ type: 'enum', enum: Vertical })
-  vertical: Vertical;
+  @ManyToOne(() => Category, (category) => category.listings)
+  @JoinColumn({ name: 'category_id' })
+  category: Category;
+
 
   @Column({ length: 255 })
   title: string;
@@ -42,34 +50,25 @@ export class Listing {
   @Column({ length: 10, default: 'ETB' })
   currency: string;
 
-  @Column({ type: 'jsonb', nullable: true })
-  location?: {
-    city?: string;
-    subcity?: string;
-    lat?: number;
-    lon?: number;
-  };
+  @Column({
+    type: 'enum',
+    enum: TransactionType,
+    default: TransactionType.SELL,
+  })
+  transaction_type: TransactionType;
 
-  @Column({ type: 'date', nullable: true })
-  available_from?: Date;
+  @Column({
+    type: 'enum',
+    enum: PriceUnit,
+    default: PriceUnit.TOTAL,
+  })
+  price_unit: string;
 
-  @Column('int', { nullable: true })
-  square_meters?: number;
+  @Column({ length: 100 })
+  city: string;
 
-  @Column({ type: 'jsonb', nullable: true })
-  amenities?: string[];
-
-  @Column({ nullable: true })
-  pet_policy?: string;
-
-  @Column({ type: 'jsonb', nullable: true })
-  nearby?: string[];
-
-  @Column({ type: 'jsonb', nullable: true })
-  extra_costs?: { name: string; amount: number }[];
-
-  @OneToMany(() => Media, (media) => media.listing, { cascade: true })
-  media: Media[];
+  @Column({ length: 255 })
+  address: string;
 
   @Column({
     type: 'enum',
@@ -78,12 +77,17 @@ export class Listing {
   })
   status: ListingStatus;
 
-  @Column({
-    type: 'enum',
-    enum: ListingVerificationLevel,
-    default: ListingVerificationLevel.NONE,
-  })
-  verification_level: ListingVerificationLevel;
+  // cascade: true allows us to save images at the same time we save the listing
+  @OneToMany(() => ListingImage, (image) => image.listing, { cascade: true })
+  images: ListingImage[];
+
+  // OPTIONAL DETAILS (OneToOne)
+
+  @OneToOne(() => RealEstateAttribute, (realEstate) => realEstate.listing, { cascade: true, nullable: true })
+  realEstateAttributes: RealEstateAttribute;
+
+  @OneToOne(() => VehicleAttribute, (vehicle) => vehicle.listing, { cascade: true, nullable: true })
+  vehicleAttributes: VehicleAttribute;
 
   @CreateDateColumn()
   created_at: Date;

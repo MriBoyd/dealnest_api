@@ -15,12 +15,11 @@ export class MediaController {
 
   @Get(':id')
   async get(@Param('id') id: string) {
-    const media = await this.mediaService.get(id);
+    const image = await this.mediaService.get(Number(id));
     return {
-      id: media.id,
-      filename: media.filename,
-      mimetype: media.mimetype,
-      base64: media.data.toString('base64'),
+      id: image.id,
+      url: image.imageUrl,
+      isPrimary: image.isPrimary,
     };
   }
 }

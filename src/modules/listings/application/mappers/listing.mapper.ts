@@ -1,34 +1,31 @@
 import { Listing } from '../../domain/entities/listing.entity';
-import { ListingResponseDto } from '../../presentation/dto/listing-response.dto';
+import { ListingResponseDto, ListingImageResponseDto } from '../../presentation/dto/listing-response.dto';
 import { UserMapper } from '../../../user/application/mappers/user.mapper';
-import { MediaResponseDto } from 'src/modules/media/presentation/dto/media-response.dto';
 
 export class ListingMapper {
   static toResponse(listing: Listing): ListingResponseDto {
     return {
       id: listing.id,
       owner: UserMapper.toResponse(listing.owner),
-      vertical: listing.vertical,
       title: listing.title,
       description: listing.description,
       price: Number(listing.price),
       currency: listing.currency,
-      location: listing.location,
-      available_from: listing.available_from,
-      square_meters: listing.square_meters,
-      amenities: listing.amenities,
-      pet_policy: listing.pet_policy,
-      nearby: listing.nearby,
-      extra_costs: listing.extra_costs,
-      media: (listing.media?.map(
-        (m): MediaResponseDto => ({
-          id: m.id,
-          filename: m.filename,
-          mimetype: m.mimetype,
-        }),
-      ) ?? []) as MediaResponseDto[],
+      transaction_type: listing.transaction_type,
+      price_unit: listing.price_unit,
+      city: listing.city,
+      address: listing.address,
       status: listing.status,
-      verification_level: listing.verification_level,
+      category: listing.category ? { id: (listing.category as any).id, name: (listing.category as any).name } : undefined,
+      images: (listing.images?.map(
+        (img): ListingImageResponseDto => ({
+          id: img.id,
+          url: img.imageUrl,
+          isPrimary: img.isPrimary,
+        }),
+      ) ?? []),
+      realEstateAttributes: listing.realEstateAttributes || undefined,
+      vehicleAttributes: listing.vehicleAttributes || undefined,
       created_at: listing.created_at,
       updated_at: listing.updated_at,
     };

@@ -1,22 +1,24 @@
-import {
-  IsOptional,
-  IsString,
-  IsEnum,
-  IsNumber,
-  Min,
-  IsIn,
-} from 'class-validator';
+import { IsOptional, IsString, IsEnum, IsNumber, Min, IsIn, IsUUID } from 'class-validator';
 import { Type } from 'class-transformer';
-import { Vertical } from '../../domain/enums/vertical.enum';
+import { TransactionType } from '../../domain/enums/transaction-type.enum';
+import { PriceUnit } from '../../domain/enums/price-unit.enum';
 
 export class FilterListingsDto {
   @IsOptional()
   @IsString()
-  city?: string; // location.city
+  city?: string;
 
   @IsOptional()
-  @IsEnum(Vertical)
-  vertical?: Vertical;
+  @IsUUID()
+  categoryId?: string;
+
+  @IsOptional()
+  @IsEnum(TransactionType)
+  transaction_type?: TransactionType;
+
+  @IsOptional()
+  @IsEnum(PriceUnit)
+  price_unit?: PriceUnit;
 
   @IsOptional()
   @Type(() => Number)
@@ -55,19 +57,5 @@ export class FilterListingsDto {
   @IsIn(['ASC', 'DESC'])
   order: 'ASC' | 'DESC' = 'DESC';
 
-  // geo search
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  lat?: number;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  lon?: number;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  radiusKm?: number; // radius in kilometers
+  // removed geo search for simplified schema
 }

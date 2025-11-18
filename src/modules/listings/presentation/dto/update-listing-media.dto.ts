@@ -1,8 +1,8 @@
 // update-listing-media.dto.ts
-import { IsArray, IsUUID } from 'class-validator';
+import { IsArray, IsInt } from 'class-validator';
 
 export class UpdateListingMediaDto {
   @IsArray()
-  @IsUUID('all', { each: true })
-  mediaIds: string[];
+  @IsInt({ each: true })
+  imageIds: number[];
 }

@@ -8,7 +8,6 @@ import { User } from '../../../user/domain/entities/user.entity';
 import { testDatabaseConfig } from '../../../../config/test-database.config';
 import { Repository } from 'typeorm';
 import { Role } from '../../../../common/enums/role.enum';
-import { Vertical } from '../../../listings/domain/enums/vertical.enum';
 import { ForbiddenException } from '@nestjs/common';
 
 describe('Reviews Approval (Integration)', () => {
@@ -60,7 +59,9 @@ describe('Reviews Approval (Integration)', () => {
             title: 'Test Listing',
             description: 'Test Description',
             price: 100,
-            vertical: Vertical.NEW_CAR,
+            currency: 'ETB',
+            city: 'Addis Ababa',
+            address: 'Test Address',
             owner: seller,
         });
     });
