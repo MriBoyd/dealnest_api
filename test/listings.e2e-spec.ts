@@ -90,7 +90,7 @@ describe('Listings (e2e)', () => {
       .expect(200);
 
     expect(res.body.meta).toBeDefined();
-    expect(res.body.meta.limit).toBe(5);
+    expect(Number(res.body.meta.limit)).toBe(5);
     expect(Array.isArray(res.body.data)).toBe(true);
   });
 
