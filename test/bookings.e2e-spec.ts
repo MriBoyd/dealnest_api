@@ -9,6 +9,7 @@ import { Role } from '../src/common/enums/role.enum';
 import { AuthService } from '../src/modules/auth/application/services/auth.service';
 import { Listing } from '../src/modules/listings/domain/entities/listing.entity';
 import { Booking, BookingStatus } from '../src/modules/bookings/domain/entities/booking.entity';
+import { UserResponseDto } from 'src/modules/user/presentation/dto/user-response.dto';
 
 dotenv.config({ path: '.env.test' });
 
@@ -42,15 +43,15 @@ describe('Bookings (e2e)', () => {
     await dataSource.getRepository(User).query('TRUNCATE TABLE "users" CASCADE;');
 
     const userRepo = dataSource.getRepository(User);
-    buyer = await userRepo.save({ email: 'buyer@e2e.com', name: 'Buyer', role: Role.INDIVIDUAL_BUYER } as any);
-    seller = await userRepo.save({ email: 'seller@e2e.com', name: 'Seller', role: Role.HOMEOWNER } as any);
-    admin = await userRepo.save({ email: 'admin@e2e.com', name: 'Admin', role: Role.ADMIN } as any);
+    buyer = await userRepo.save({ email: 'buyer@e2e.com', name: 'Buyer', role: Role.INDIVIDUAL_BUYER } as User);
+    seller = await userRepo.save({ email: 'seller@e2e.com', name: 'Seller', role: Role.HOMEOWNER } as User);
+    admin = await userRepo.save({ email: 'admin@e2e.com', name: 'Admin', role: Role.ADMIN } as User);
 
-    buyerToken = (await authService.login({ id: buyer.id, email: buyer.email, name: buyer.name, role: buyer.role, is_email_verified: true } as any)).access_token;
-    sellerToken = (await authService.login({ id: seller.id, email: seller.email, name: seller.name, role: seller.role, is_email_verified: true } as any)).access_token;
-    adminToken = (await authService.login({ id: admin.id, email: admin.email, name: admin.name, role: admin.role, is_email_verified: true } as any)).access_token;
+    buyerToken = (await authService.login({ id: buyer.id, email: buyer.email, name: buyer.name, role: buyer.role, is_email_verified: true } as UserResponseDto)).access_token;
+    sellerToken = (await authService.login({ id: seller.id, email: seller.email, name: seller.name, role: seller.role, is_email_verified: true } as UserResponseDto)).access_token;
+    adminToken = (await authService.login({ id: admin.id, email: admin.email, name: admin.name, role: admin.role, is_email_verified: true } as UserResponseDto)).access_token;
 
-    listing = await dataSource.getRepository(Listing).save({ title: 'E2E Listing', price: 120, currency: 'ETB', city: 'Addis', address: 'Addr', owner: seller } as any);
+    listing = await dataSource.getRepository(Listing).save({ title: 'E2E Listing', price: 120, currency: 'ETB', city: 'Addis', address: 'Addr', owner: seller } as Listing);
   });
 
   afterAll(async () => {

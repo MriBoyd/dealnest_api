@@ -34,7 +34,7 @@ describe('AuthService (Integration)', () => {
   });
 
   it('requestPasswordReset saves token and expiry', async () => {
-    await users.save({ email: 'int@a.com', name: 'Int', role: 'individual_buyer' } as any);
+    await users.save({ email: 'int@a.com', name: 'Int', role: 'individual_buyer' } as User);
     const res = await service.requestPasswordReset({ email: 'int@a.com' });
     expect(res.message).toBeDefined();
 
@@ -44,7 +44,7 @@ describe('AuthService (Integration)', () => {
   });
 
   it('resetPassword updates hash and clears fields', async () => {
-    const u = await users.save({ email: 'int2@a.com', name: 'Int2', role: 'individual_buyer', email_verification_token: 'tok', email_verification_expires: new Date(Date.now() + 3600000) } as any);
+    const u = await users.save({ email: 'int2@a.com', name: 'Int2', role: 'individual_buyer', email_verification_token: 'tok', email_verification_expires: new Date(Date.now() + 3600000) } as User);
     const res = await service.resetPassword({ token: 'tok', new_password: 'newpassword123' });
     expect(res.message).toContain('successful');
 

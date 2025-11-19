@@ -55,7 +55,7 @@ export class NotificationsService {
   async listForUser(userId: string, page = 1, limit = 50) {
     const skip = (page - 1) * limit;
     return this.notificationRepo.find({
-      where: { user: { id: userId } as any },
+      where: { user: { id: userId } as User },
       order: { created_at: 'DESC' },
       skip,
       take: limit,

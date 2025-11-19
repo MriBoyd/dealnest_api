@@ -9,6 +9,7 @@ import { Role } from '../src/common/enums/role.enum';
 import { AuthService } from '../src/modules/auth/application/services/auth.service';
 import { Listing } from '../src/modules/listings/domain/entities/listing.entity';
 import { ListingImage } from '../src/modules/media/domain/entities/media.entity';
+import { UserResponseDto } from 'src/modules/user/presentation/dto/user-response.dto';
 
 // Load test env so AppModule connects to test DB
 dotenv.config({ path: '.env.test' });
@@ -41,11 +42,11 @@ describe('Listings (e2e)', () => {
 
     const userRepo = dataSource.getRepository(User);
 
-    seller = await userRepo.save({ email: 'seller@e2e.com', name: 'Seller', role: Role.HOMEOWNER } as any);
-    admin = await userRepo.save({ email: 'admin@e2e.com', name: 'Admin', role: Role.ADMIN } as any);
+    seller = await userRepo.save({ email: 'seller@e2e.com', name: 'Seller', role: Role.HOMEOWNER } as User);
+    admin = await userRepo.save({ email: 'admin@e2e.com', name: 'Admin', role: Role.ADMIN } as User);
 
-    sellerToken = (await authService.login({ id: seller.id, email: seller.email, name: seller.name, role: seller.role, is_email_verified: true } as any)).access_token;
-    adminToken = (await authService.login({ id: admin.id, email: admin.email, name: admin.name, role: admin.role, is_email_verified: true } as any)).access_token;
+    sellerToken = (await authService.login({ id: seller.id, email: seller.email, name: seller.name, role: seller.role, is_email_verified: true } as UserResponseDto)).access_token;
+    adminToken = (await authService.login({ id: admin.id, email: admin.email, name: admin.name, role: admin.role, is_email_verified: true } as UserResponseDto)).access_token;
   });
 
   afterAll(async () => {

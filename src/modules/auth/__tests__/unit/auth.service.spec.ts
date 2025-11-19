@@ -7,6 +7,7 @@ import { UserService } from '../../../user/application/services/user.service';
 import { JwtService } from '@nestjs/jwt';
 import { EmailService } from '../../../auth/infrastructure/adapters/email.service';
 import { UnauthorizedException } from '@nestjs/common';
+import { UserResponseDto } from 'src/modules/user/presentation/dto/user-response.dto';
 
 jest.mock('bcrypt', () => ({
   compare: jest.fn(async (a: string, b: string) => a === b),
@@ -40,42 +41,42 @@ describe('AuthService (Unit)', () => {
 
     service = moduleRef.get(AuthService);
     userRepo = moduleRef.get(getRepositoryToken(User));
-    userService = moduleRef.get(UserService) as any;
-    jwt = moduleRef.get(JwtService) as any;
-    email = moduleRef.get(EmailService) as any;
+    userService = moduleRef.get(UserService);
+    jwt = moduleRef.get(JwtService);
+    email = moduleRef.get(EmailService);
   });
 
   it('validateUser fails for missing user/password', async () => {
-    userService.findUserByEmail.mockResolvedValue({ password_hash: undefined } as any);
+    userService.findUserByEmail.mockResolvedValue({ password_hash: undefined } as User);
     await expect(service.validateUser('x@example.com', 'pwd')).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
   it('validateUser fails on invalid password', async () => {
-    userService.findUserByEmail.mockResolvedValue({ password_hash: 'hashed:other' } as any);
+    userService.findUserByEmail.mockResolvedValue({ password_hash: 'hashed:other' } as User);
     await expect(service.validateUser('x@example.com', 'pwd')).rejects.toBeInstanceOf(UnauthorizedException);
   });
 
   it('validateUser returns mapped user on success', async () => {
-    userService.findUserByEmail.mockResolvedValue({ id: 'u1', email: 'u@t.com', name: 'U', role: 'individual_buyer', password_hash: 'pwd' } as any);
+    userService.findUserByEmail.mockResolvedValue({ id: 'u1', email: 'u@t.com', name: 'U', role: 'individual_buyer', password_hash: 'pwd' } as User);
     const res = await service.validateUser('u@t.com', 'pwd');
     expect(res.email).toBe('u@t.com');
   });
 
   it('login returns jwt token', async () => {
-    const result = await service.login({ id: 'u1', email: 'u@t.com', name: 'U', role: 'individual_buyer' } as any);
+    const result = await service.login({ id: 'u1', email: 'u@t.com', name: 'U', role: 'individual_buyer' } as UserResponseDto);
     expect(result.access_token).toBe('token-123');
     expect(jwt.sign).toHaveBeenCalled();
   });
 
   it('requestPasswordReset sets token and emails user', async () => {
-    userRepo.findOne.mockResolvedValue({ id: 'u1', email: 'a@b.com' } as any);
+    userRepo.findOne.mockResolvedValue({ id: 'u1', email: 'a@b.com' } as User);
     userRepo.save.mockImplementation(async (u: any) => u);
     const res = await service.requestPasswordReset({ email: 'a@b.com' });
     expect(res.message).toBeDefined();
   });
 
   it('resetPassword updates hash and clears token', async () => {
-    userRepo.findOne.mockResolvedValue({ id: 'u1', email: 'a@b.com', email_verification_token: 't1', email_verification_expires: new Date(Date.now() + 10000) } as any);
+    userRepo.findOne.mockResolvedValue({ id: 'u1', email: 'a@b.com', email_verification_token: 't1', email_verification_expires: new Date(Date.now() + 10000) } as User);
     userRepo.save.mockImplementation(async (u: any) => u);
     const res = await service.resetPassword({ token: 't1', new_password: 'new-password' });
     expect(res.message).toContain('successful');

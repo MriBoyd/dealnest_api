@@ -5,6 +5,8 @@ import { BookingsService } from '../../../bookings/application/services/bookings
 import { Booking, BookingStatus } from '../../../bookings/domain/entities/booking.entity';
 import { Listing } from '../../../listings/domain/entities/listing.entity';
 import { NotFoundException, ForbiddenException } from '@nestjs/common';
+import { CreateBookingDto } from '../../presentation/dto/create-booking.dto';
+import { User } from 'src/modules/user/domain/entities/user.entity';
 
 function createRepoMock<T>() {
   return {
@@ -37,55 +39,55 @@ describe('BookingsService (Unit)', () => {
   });
 
   it('create throws if listing not found', async () => {
-    listingRepo.findOne.mockResolvedValue(null as any);
+    listingRepo.findOne.mockResolvedValue(null);
     await expect(
-      service.create({ listingId: 'x', start_date: '2025-01-01', end_date: '2025-01-02' } as any, { id: 'u1' } as any),
+      service.create({ listingId: 'x', start_date: '2025-01-01', end_date: '2025-01-02' } as CreateBookingDto, { id: 'u1' } as User),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('create saves booking when listing exists', async () => {
-    listingRepo.findOne.mockResolvedValue({ id: 'l1' } as any);
-    bookingRepo.save.mockResolvedValue({ id: 'b1' } as any);
+    listingRepo.findOne.mockResolvedValue({ id: 'l1' } as Listing);
+    bookingRepo.save.mockResolvedValue({ id: 'b1' } as Booking);
 
-    const res = await service.create({ listingId: 'l1', start_date: '2025-01-01', end_date: '2025-01-02' } as any, { id: 'u1' } as any);
+    const res = await service.create({ listingId: 'l1', start_date: '2025-01-01', end_date: '2025-01-02' } as CreateBookingDto, { id: 'u1' } as User);
     expect(res.id).toBe('b1');
     expect(bookingRepo.create).toHaveBeenCalled();
     expect(bookingRepo.save).toHaveBeenCalled();
   });
 
   it('updateStatus throws NotFound when booking missing', async () => {
-    bookingRepo.findOne.mockResolvedValue(null as any);
+    bookingRepo.findOne.mockResolvedValue(null);
     await expect(
-      service.updateStatus('b-missing', { status: BookingStatus.CONFIRMED }, { id: 'u1', role: 'individual_buyer' } as any),
+      service.updateStatus('b-missing', { status: BookingStatus.CONFIRMED }, { id: 'u1', role: 'individual_buyer' } as User),
     ).rejects.toBeInstanceOf(NotFoundException);
   });
 
   it('updateStatus forbids non-owner non-admin', async () => {
-    bookingRepo.findOne.mockResolvedValue({ id: 'b1', user: { id: 'u-owner' } } as any);
+    bookingRepo.findOne.mockResolvedValue({ id: 'b1', user: { id: 'u-owner' } } as Booking);
     await expect(
-      service.updateStatus('b1', { status: BookingStatus.CONFIRMED }, { id: 'u2', role: 'individual_buyer' } as any),
+      service.updateStatus('b1', { status: BookingStatus.CONFIRMED }, { id: 'u2', role: 'individual_buyer' } as User),
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
   it('updateStatus allows owner', async () => {
-    const booking = { id: 'b1', user: { id: 'u1' }, status: BookingStatus.PENDING } as any;
+    const booking = { id: 'b1', user: { id: 'u1' }, status: BookingStatus.PENDING } as Booking;
     bookingRepo.findOne.mockResolvedValue(booking);
     bookingRepo.save.mockImplementation(async (b: any) => b);
 
-    const res = await service.updateStatus('b1', { status: BookingStatus.CONFIRMED }, { id: 'u1', role: 'individual_buyer' } as any);
+    const res = await service.updateStatus('b1', { status: BookingStatus.CONFIRMED }, { id: 'u1', role: 'individual_buyer' } as User);
     expect(res.status).toBe(BookingStatus.CONFIRMED);
   });
 
   it('getBookingDetail forbids non-owner non-admin', async () => {
-    bookingRepo.findOne.mockResolvedValue({ id: 'b1', user: { id: 'owner' } } as any);
+    bookingRepo.findOne.mockResolvedValue({ id: 'b1', user: { id: 'owner' } } as Booking);
     await expect(
-      service.getBookingDetail('b1', { id: 'intruder', role: 'individual_buyer' } as any),
+      service.getBookingDetail('b1', { id: 'intruder', role: 'individual_buyer' } as User),
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 
   it('cancelBooking returns success string', async () => {
-    bookingRepo.findOne.mockResolvedValue({ id: 'b1', user: { id: 'u1' }, status: BookingStatus.PENDING } as any);
-    const res = await service.cancelBooking('b1', { id: 'u1', role: 'individual_buyer' } as any);
+    bookingRepo.findOne.mockResolvedValue({ id: 'b1', user: { id: 'u1' }, status: BookingStatus.PENDING } as Booking);
+    const res = await service.cancelBooking('b1', { id: 'u1', role: 'individual_buyer' } as User);
     expect(res).toBe('Booking cancelled successfully');
   });
 });

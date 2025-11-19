@@ -48,8 +48,8 @@ export class TestUtils {
       description: data.description,
       price: data.price || 100,
       currency: data.currency || 'ETB',
-      city: (data as any).city || 'Addis',
-      address: (data as any).address || 'Address',
+      city: (data as Listing).city || 'Addis',
+      address: (data as Listing).address || 'Address',
       owner,
     });
     return this.listingRepo.save(listing);
@@ -68,7 +68,7 @@ export class TestUtils {
       target_type: data.target_type || 'listing',
       rating: data.rating || 5,
       comment: data.comment,
-    } as any);
-    return this.reviewRepo.save(review as any);
+    } as Review);
+    return this.reviewRepo.save(review as Review);
   }
 }

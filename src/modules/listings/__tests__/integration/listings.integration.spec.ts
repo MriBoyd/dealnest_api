@@ -8,6 +8,8 @@ import { User } from '../../../user/domain/entities/user.entity';
 import { Repository } from 'typeorm';
 import { Role } from '../../../../common/enums/role.enum';
 import { ListingStatus } from '../../domain/enums/listing-status.enum';
+import { UpdateListingMediaDto } from '../../presentation/dto/update-listing-media.dto';
+import { UpdateListingStatusDto } from '../../presentation/dto/update-listing-status.dto';
 
 
 describe('ListingsService (Integration)', () => {
@@ -36,9 +38,9 @@ describe('ListingsService (Integration)', () => {
   });
 
   it('creates a listing and links images', async () => {
-    const seller = await userRepo.save({ email: 'seller@t.com', name: 'Seller', role: Role.HOMEOWNER } as any);
-    const img1 = await imageRepo.save({ imageUrl: 'u1.jpg', isPrimary: false } as any);
-    const img2 = await imageRepo.save({ imageUrl: 'u2.jpg', isPrimary: true } as any);
+    const seller = await userRepo.save({ email: 'seller@t.com', name: 'Seller', role: Role.HOMEOWNER } as User);
+    const img1 = await imageRepo.save({ imageUrl: 'u1.jpg', isPrimary: false } as ListingImage);
+    const img2 = await imageRepo.save({ imageUrl: 'u2.jpg', isPrimary: true } as ListingImage);
 
     const dto: any = {
       title: 'House', description: 'Nice', price: 123, currency: 'ETB',
@@ -52,23 +54,23 @@ describe('ListingsService (Integration)', () => {
   });
 
   it('updateStatus by admin persists', async () => {
-    const admin = await userRepo.save({ email: 'admin@t.com', name: 'Admin', role: Role.ADMIN } as any);
-    const seller = await userRepo.save({ email: 'seller2@t.com', name: 'Seller2', role: Role.HOMEOWNER } as any);
-    const listing = await listingRepo.save({ title: 'Car', price: 200, currency: 'ETB', city: 'Addis', address: 'Addr', owner: seller } as any);
+    const admin = await userRepo.save({ email: 'admin@t.com', name: 'Admin', role: Role.ADMIN } as User);
+    const seller = await userRepo.save({ email: 'seller2@t.com', name: 'Seller2', role: Role.HOMEOWNER } as User);
+    const listing = await listingRepo.save({ title: 'Car', price: 200, currency: 'ETB', city: 'Addis', address: 'Addr', owner: seller } as Listing);
 
-    const res = await service.updateStatus(listing.id, { status: ListingStatus.APPROVED } as any, admin);
+    const res = await service.updateStatus(listing.id, { status: ListingStatus.APPROVED } as UpdateListingStatusDto, admin);
     expect(res.status).toBe(ListingStatus.APPROVED);
     const refreshed = await listingRepo.findOne({ where: { id: listing.id } });
     expect(refreshed?.status).toBe(ListingStatus.APPROVED);
   });
 
   it('updateMedia replaces images with provided list', async () => {
-    const seller = await userRepo.save({ email: 'seller3@t.com', name: 'Seller3', role: Role.HOMEOWNER } as any);
-    const listing = await listingRepo.save({ title: 'Bike', price: 50, currency: 'ETB', city: 'Addis', address: 'Addr', owner: seller } as any);
-    const imgA = await imageRepo.save({ imageUrl: 'a.jpg', isPrimary: false } as any);
-    const imgB = await imageRepo.save({ imageUrl: 'b.jpg', isPrimary: false } as any);
+    const seller = await userRepo.save({ email: 'seller3@t.com', name: 'Seller3', role: Role.HOMEOWNER } as User);
+    const listing = await listingRepo.save({ title: 'Bike', price: 50, currency: 'ETB', city: 'Addis', address: 'Addr', owner: seller } as Listing);
+    const imgA = await imageRepo.save({ imageUrl: 'a.jpg', isPrimary: false } as ListingImage);
+    const imgB = await imageRepo.save({ imageUrl: 'b.jpg', isPrimary: false } as ListingImage);
 
-    const res = await service.updateMedia(listing.id, { imageIds: [imgA.id, imgB.id] } as any, seller);
+    const res = await service.updateMedia(listing.id, { imageIds: [imgA.id, imgB.id] } as UpdateListingMediaDto, seller);
     expect(res.images.length).toBe(2);
 
     // Service returns the updated images in response; persistence may depend on owning side

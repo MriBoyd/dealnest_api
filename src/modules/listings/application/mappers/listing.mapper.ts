@@ -1,6 +1,7 @@
 import { Listing } from '../../domain/entities/listing.entity';
 import { ListingResponseDto, ListingImageResponseDto } from '../../presentation/dto/listing-response.dto';
 import { UserMapper } from '../../../user/application/mappers/user.mapper';
+import { Category } from '../../domain/entities/category.entity';
 
 export class ListingMapper {
   static toResponse(listing: Listing): ListingResponseDto {
@@ -16,7 +17,7 @@ export class ListingMapper {
       city: listing.city,
       address: listing.address,
       status: listing.status,
-      category: listing.category ? { id: (listing.category as any).id, name: (listing.category as any).name } : undefined,
+      category: listing.category ? { id: String((listing.category as Category).id), name: (listing.category as Category).name } : undefined,
       images: (listing.images?.map(
         (img): ListingImageResponseDto => ({
           id: img.id,
