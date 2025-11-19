@@ -122,8 +122,6 @@ export class ListingsService {
 			});
 		}
 
-		// Geo search removed: listing no longer stores geo JSON (lat/lon).
-
 		const page = filters.page || 1;
 		const limit = filters.limit || 10;
 		const skip = (page - 1) * limit;

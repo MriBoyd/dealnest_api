@@ -5,23 +5,23 @@ import { ValidationPipe } from '@nestjs/common';
 
 import { createAdapter } from 'socket.io-redis';
 import { IoAdapter } from '@nestjs/platform-socket.io';
-import { ServerOptions } from 'socket.io';
-import { json } from 'express';
+import {
+  FastifyAdapter,
+  NestFastifyApplication,
+} from '@nestjs/platform-fastify';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestFastifyApplication>(
+    AppModule,
+    // 50mb
+    new FastifyAdapter({ bodyLimit: 50 * 1024 * 1024 }),
+  );
 
   const redisHost = process.env.REDIS_HOST || '127.0.0.1';
   const redisPort = Number(process.env.REDIS_PORT || 6379);
   // @ts-ignore
   const ioAdapter = new IoAdapter(app);
   // @ts-ignore
-  const serverOptions: ServerOptions = {
-    // adapter will be set below using createAdapter
-  };
-
-  app.use(json({ limit: '50mb' }));
-
   app.useGlobalPipes(new ValidationPipe());
 
   const options = new DocumentBuilder()
@@ -33,6 +33,6 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, options);
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(process.env.PORT ?? 8000);
+  await app.listen(process.env.PORT ?? 8000, '::');
 }
 void bootstrap();

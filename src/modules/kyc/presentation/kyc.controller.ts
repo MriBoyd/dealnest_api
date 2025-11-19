@@ -7,9 +7,9 @@ import {
   UseGuards,
   BadRequestException,
 } from '@nestjs/common';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { KycService } from '../application/services/kyc.service';
 import { CurrentUser } from '../../../common/decorators/current-user.decorator';
+import { FileFieldsInterceptor } from '@blazity/nest-file-fastify';
 import { User } from 'src/modules/user/domain/entities/user.entity';
 import { JwtAuthGuard } from 'src/modules/auth/infrastructure/guards/jwt-auth.guard';
 import Multer from 'multer';
