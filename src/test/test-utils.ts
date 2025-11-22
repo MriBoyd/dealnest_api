@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AppModule } from '../app.module';
 import { User } from '../modules/user/domain/entities/user.entity';
 import { Listing } from '../modules/listings/domain/entities/listing.entity';
 import { Review } from '../modules/reviews/domain/entities/review.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { AuthService } from '../modules/auth/application/services/auth.service';
 import { Role } from '../common/enums/role.enum';
 import { UserMapper } from '../modules/user/application/mappers/user.mapper';
@@ -16,13 +15,18 @@ export class TestUtils {
     @InjectRepository(Listing) private readonly listingRepo: Repository<Listing>,
     @InjectRepository(Review) private readonly reviewRepo: Repository<Review>,
     private readonly authService: AuthService,
+    private readonly dataSource: DataSource,
   ) {}
 
   async reloadFixtures() {
-    await this.reviewRepo.delete({});
-    await this.listingRepo.delete({});
-    await this.userRepo.delete({});
+    const entities = this.dataSource.entityMetadatas;
+    for (const entity of entities) {
+      const repository = this.dataSource.getRepository(entity.name);
+      await repository.query(`TRUNCATE "${entity.tableName}" RESTART IDENTITY CASCADE;`);
+    }
   }
+
+  // Remove closeDbConnection method
 
   async createUser(email: string): Promise<User> {
     const user = this.userRepo.create({

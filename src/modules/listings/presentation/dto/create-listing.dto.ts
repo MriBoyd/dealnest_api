@@ -1,4 +1,5 @@
 import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsArray, IsInt, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 import { TransactionType } from '../../domain/enums/transaction-type.enum';
 import { PriceUnit } from '../../domain/enums/price-unit.enum';
 
@@ -36,6 +37,7 @@ export class CreateListingDto {
 
   @IsOptional()
   @IsArray()
+  @Type(() => Number)
   @IsInt({ each: true })
   imageIds?: number[];
 }

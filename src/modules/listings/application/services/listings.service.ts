@@ -199,8 +199,6 @@ export class ListingsService {
 			);
 		}
 
-		// To replace images we simply ignore existing ones here; deletion handled separately if needed.
-
 		if (dto.imageIds && dto.imageIds.length > 0) {
 			const newImages = await this.imagesRepository.find({
 				where: { id: In(dto.imageIds) },
@@ -224,5 +222,14 @@ export class ListingsService {
 
 		const savedListing = await this.listingsRepository.save(listing);
 		return ListingMapper.toResponse(savedListing);
+	}
+
+	// find my listings
+	async findMyListings(user: User): Promise<ListingResponseDto[]> {
+		const listings = await this.listingsRepository.find({
+			where: { owner: { id: user.id } },
+			relations: ['images'],
+		});
+		return listings.map((listing) => ListingMapper.toResponse(listing));
 	}
 }

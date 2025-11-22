@@ -12,16 +12,20 @@ export class MediaService {
   ) {}
 
   async upload(dto: UploadMediaDto): Promise<{ id: number }> {
-    const buffer = Buffer.from(dto.base64, 'base64');
+    try {
+      const buffer = Buffer.from(dto.base64, 'base64');
 
-    const media = this.mediaRepo.create({
-      imageUrl: dto.filename || 'upload',
-      isPrimary: false,
-      // raw image data not stored here in new structure; buffer ignored
-    });
+      const media = this.mediaRepo.create({
+        imageUrl: dto.filename || 'upload',
+        isPrimary: false,
+        // raw image data not stored here in new structure; buffer ignored
+      });
 
-    const saved = await this.mediaRepo.save(media);
-    return { id: saved.id };
+      const saved = await this.mediaRepo.save(media);
+      return { id: saved.id };
+    } catch (err) {
+      throw err;
+    }
   }
 
   async get(id: number): Promise<ListingImage> {

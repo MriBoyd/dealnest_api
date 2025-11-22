@@ -5,9 +5,11 @@ import { AuthService } from '../../../auth/application/services/auth.service';
 import { User } from '../../../user/domain/entities/user.entity';
 import { UserService } from '../../../user/application/services/user.service';
 import { JwtService } from '@nestjs/jwt';
-import { EmailService } from '../../../auth/infrastructure/adapters/email.service';
 import { UnauthorizedException } from '@nestjs/common';
 import { UserResponseDto } from 'src/modules/user/presentation/dto/user-response.dto';
+import { Mailer } from '../../../email/application/services/mailer';
+import { PasswordResetToken } from '../../domain/entities/password-reset-token.entity';
+import { Role } from 'src/common/enums/role.enum';
 
 jest.mock('bcrypt', () => ({
   compare: jest.fn(async (a: string, b: string) => a === b),
@@ -18,6 +20,7 @@ function repoMock<T>() {
   return {
     findOne: jest.fn(),
     save: jest.fn(),
+    create: jest.fn((v) => v),
   } as unknown as jest.Mocked<Repository<any>>;
 }
 
@@ -26,16 +29,18 @@ describe('AuthService (Unit)', () => {
   let userRepo: jest.Mocked<Repository<User>>;
   let userService: jest.Mocked<UserService>;
   let jwt: jest.Mocked<JwtService>;
-  let email: jest.Mocked<EmailService>;
+  let mailer: jest.Mocked<Mailer>;
+  let passwordResetTokenRepo: jest.Mocked<Repository<PasswordResetToken>>;
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
       providers: [
         AuthService,
         { provide: getRepositoryToken(User), useValue: repoMock<User>() },
+        { provide: getRepositoryToken(PasswordResetToken), useValue: repoMock<PasswordResetToken>() },
         { provide: UserService, useValue: { findUserByEmail: jest.fn(), createUser: jest.fn() } },
         { provide: JwtService, useValue: { sign: jest.fn().mockReturnValue('token-123') } },
-        { provide: EmailService, useValue: { sendPasswordResetEmail: jest.fn() } },
+        { provide: Mailer, useValue: { sendPasswordResetEmail: jest.fn() } },
       ],
     }).compile();
 
@@ -43,7 +48,8 @@ describe('AuthService (Unit)', () => {
     userRepo = moduleRef.get(getRepositoryToken(User));
     userService = moduleRef.get(UserService);
     jwt = moduleRef.get(JwtService);
-    email = moduleRef.get(EmailService);
+    mailer = moduleRef.get(Mailer);
+    passwordResetTokenRepo = moduleRef.get(getRepositoryToken(PasswordResetToken));
   });
 
   it('validateUser fails for missing user/password', async () => {
@@ -76,7 +82,26 @@ describe('AuthService (Unit)', () => {
   });
 
   it('resetPassword updates hash and clears token', async () => {
-    userRepo.findOne.mockResolvedValue({ id: 'u1', email: 'a@b.com', email_verification_token: 't1', email_verification_expires: new Date(Date.now() + 10000) } as User);
+    const mockUser: User = {
+      id: 'u1',
+      email: 'a@b.com',
+      name: 'Test User',
+      role: 'individual_buyer' as Role, 
+      has_kyc: false,
+      is_email_verified: false,
+      preferred_language: 'en',
+      created_at: new Date(),
+      updated_at: new Date(),
+    } as User;
+
+    // Mock PasswordResetToken entity for the token
+    passwordResetTokenRepo.findOne.mockResolvedValue({
+      token: 't1',
+      user: mockUser,
+      expires_at: new Date(Date.now() + 60 * 60 * 1000),
+      consumed_at: null,
+      save: jest.fn(),
+    } as any);
     userRepo.save.mockImplementation(async (u: any) => u);
     const res = await service.resetPassword({ token: 't1', new_password: 'new-password' });
     expect(res.message).toContain('successful');

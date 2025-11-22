@@ -1,5 +1,6 @@
-import { Test } from '@nestjs/testing';
-import { TypeOrmModule, getRepositoryToken } from '@nestjs/typeorm';
+import { EmailVerification } from '../../../email/domain/entities/email-verification.entity';
+import { Test, TestingModule } from '@nestjs/testing';
+import { TypeOrmModule, TypeOrmModuleOptions, getRepositoryToken } from '@nestjs/typeorm';
 import { testDatabaseConfig } from '../../../../config/test-database.config';
 import { ListingsService } from '../../application/services/listings.service';
 import { Listing } from '../../domain/entities/listing.entity';
@@ -10,6 +11,15 @@ import { Role } from '../../../../common/enums/role.enum';
 import { ListingStatus } from '../../domain/enums/listing-status.enum';
 import { UpdateListingMediaDto } from '../../presentation/dto/update-listing-media.dto';
 import { UpdateListingStatusDto } from '../../presentation/dto/update-listing-status.dto';
+import { TestUtils } from 'src/test/test-utils';
+import { Review } from '../../../reviews/domain/entities/review.entity';
+import { AuthService } from 'src/modules/auth/application/services/auth.service';
+import { UserService } from 'src/modules/user/application/services/user.service';
+import { JwtService } from '@nestjs/jwt';
+import { Mailer } from 'src/modules/email/application/services/mailer';
+import { PasswordResetToken } from 'src/modules/auth/domain/entities/password-reset-token.entity';
+import { EmailService } from 'src/modules/email/application/services/email.service';
+import { ConfigService } from '@nestjs/config';
 
 
 describe('ListingsService (Integration)', () => {
@@ -17,24 +27,50 @@ describe('ListingsService (Integration)', () => {
   let userRepo: Repository<User>;
   let listingRepo: Repository<Listing>;
   let imageRepo: Repository<ListingImage>;
+  let moduleRef: TestingModule; // Declare moduleRef
+  let testUtils: TestUtils; // Declare testUtils
 
   beforeAll(async () => {
-    const moduleRef = await Test.createTestingModule({
+    moduleRef = await Test.createTestingModule({
       imports: [
-        TypeOrmModule.forRoot(testDatabaseConfig),
-        TypeOrmModule.forFeature([Listing, ListingImage, User]),
+        TypeOrmModule.forRoot(testDatabaseConfig as TypeOrmModuleOptions),
+        TypeOrmModule.forFeature([Listing, ListingImage, User, Review, PasswordResetToken, EmailVerification]),
       ],
-      providers: [ListingsService],
+      providers: [
+        ListingsService,
+        TestUtils,
+        AuthService,
+        UserService,
+        JwtService,
+        Mailer,
+        EmailService,
+        ConfigService,
+        {
+          provide: getRepositoryToken(PasswordResetToken),
+          useValue: {}, // simple mock
+        },
+        {
+          provide: getRepositoryToken(EmailVerification),
+          useValue: {}, // simple mock
+        },
+      ],
     }).compile();
 
     service = moduleRef.get(ListingsService);
     userRepo = moduleRef.get(getRepositoryToken(User));
     listingRepo = moduleRef.get(getRepositoryToken(Listing));
     imageRepo = moduleRef.get(getRepositoryToken(ListingImage));
+    testUtils = moduleRef.get<TestUtils>(TestUtils); // Get TestUtils instance
 
-    await imageRepo.query('TRUNCATE TABLE "listing_images" RESTART IDENTITY CASCADE;');
-    await listingRepo.query('TRUNCATE TABLE "listings" CASCADE;');
-    await userRepo.query('TRUNCATE TABLE "users" CASCADE;');
+    await testUtils.reloadFixtures(); // Use TestUtils to clear database
+  });
+
+  afterAll(async () => {
+    await moduleRef.close(); // Close NestJS module
+  });
+
+  beforeEach(async () => {
+    await testUtils.reloadFixtures(); // Ensure clean state before each test
   });
 
   it('creates a listing and links images', async () => {
@@ -56,7 +92,7 @@ describe('ListingsService (Integration)', () => {
   it('updateStatus by admin persists', async () => {
     const admin = await userRepo.save({ email: 'admin@t.com', name: 'Admin', role: Role.ADMIN } as User);
     const seller = await userRepo.save({ email: 'seller2@t.com', name: 'Seller2', role: Role.HOMEOWNER } as User);
-    const listing = await listingRepo.save({ title: 'Car', price: 200, currency: 'ETB', city: 'Addis', address: 'Addr', owner: seller } as Listing);
+    const listing = await listingRepo.save({ title: 'Car', description: 'Good', price: 200, currency: 'ETB', city: 'Addis', address: 'Addr', owner: seller } as Listing);
 
     const res = await service.updateStatus(listing.id, { status: ListingStatus.APPROVED } as UpdateListingStatusDto, admin);
     expect(res.status).toBe(ListingStatus.APPROVED);
@@ -66,7 +102,7 @@ describe('ListingsService (Integration)', () => {
 
   it('updateMedia replaces images with provided list', async () => {
     const seller = await userRepo.save({ email: 'seller3@t.com', name: 'Seller3', role: Role.HOMEOWNER } as User);
-    const listing = await listingRepo.save({ title: 'Bike', price: 50, currency: 'ETB', city: 'Addis', address: 'Addr', owner: seller } as Listing);
+    const listing = await listingRepo.save({ title: 'Bike', description: 'Good', price: 50, currency: 'ETB', city: 'Addis', address: 'Addr', owner: seller } as Listing);
     const imgA = await imageRepo.save({ imageUrl: 'a.jpg', isPrimary: false } as ListingImage);
     const imgB = await imageRepo.save({ imageUrl: 'b.jpg', isPrimary: false } as ListingImage);
 

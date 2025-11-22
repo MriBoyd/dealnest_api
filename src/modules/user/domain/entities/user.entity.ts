@@ -1,6 +1,7 @@
 import { Exclude, Expose } from 'class-transformer';
 import { Role } from '../../../../common/enums/role.enum';
 import { Kyc } from '../../../kyc/domain/entities/kyc.entity';
+import { EmailVerification } from '../../../email/domain/entities/email-verification.entity';
 import { Listing } from '../../../listings/domain/entities/listing.entity';
 import {
   Entity,
@@ -11,13 +12,6 @@ import {
   OneToOne,
   OneToMany,
 } from 'typeorm';
-
-export enum KycStatus {
-  NOT_SUBMITTED = 'not_submitted',
-  PENDING = 'pending',
-  APPROVED = 'approved',
-  REJECTED = 'rejected',
-}
 
 @Entity('users')
 export class User {
@@ -69,31 +63,15 @@ export class User {
   @Expose()
   is_email_verified: boolean;
 
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  @Exclude()
-  email_verification_token: string | null;
-
-  @Column({ type: 'timestamptz', nullable: true })
-  @Exclude()
-  email_verification_expires: Date | null;
-
-  @Column({ type: 'timestamptz', nullable: true })
-  @Exclude()
-  last_verification_email_sent: Date | null;
-
-  @Column({
-    type: 'enum',
-    enum: KycStatus,
-    default: KycStatus.NOT_SUBMITTED,
-  })
-  @Expose()
-  kyc_status: KycStatus;
-
-  @Column({ type: 'text', nullable: true })
-  kyc_notes?: string | null;
+  // the user have kyc or not
+  @Column({ type: 'boolean', default: false, nullable: false})
+  has_kyc: boolean;
 
   @OneToOne(() => Kyc, (kyc) => kyc.user)
   kyc: Kyc;
+
+  @OneToOne(() => EmailVerification, (verification) => verification.user)
+  email_verification: EmailVerification;
 
   @OneToMany(() => Listing, (listing) => listing.owner)
   listings: Listing[];

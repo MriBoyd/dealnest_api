@@ -10,7 +10,13 @@ export class MediaController {
 
   @Post('upload-url')
   async upload(@Body() dto: UploadMediaDto) {
-    return this.mediaService.upload(dto);
+    try {
+      const result = await this.mediaService.upload(dto);
+      return result;
+    } catch (err) {
+      console.error('MediaController.upload error:', err);
+      throw err;
+    }
   }
 
   @Get(':id')

@@ -5,6 +5,7 @@ import { User } from './domain/entities/user.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthModule } from '../auth/auth.module';
 import { MediaModule } from '../media/media.module';
+import { EmailModule } from '../email/email.module';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
@@ -12,9 +13,10 @@ import { ConfigModule } from '@nestjs/config';
   exports: [UserService],
   controllers: [UserController],
   imports: [
-    TypeOrmModule.forFeature([User]),
+      TypeOrmModule.forFeature([User]),
     forwardRef(() => AuthModule),
     MediaModule,
+    forwardRef(() => EmailModule),
     ConfigModule,
   ],
 })

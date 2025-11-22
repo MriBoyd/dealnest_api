@@ -7,7 +7,7 @@ export class Category {
     id: number;
 
     @Column()
-    name: string;
+    name: string; // e.g., 'Real Estate'
 
     @Column({ unique: true })
     slug: string; // e.g., 'real-estate-for-sale'

@@ -1,4 +1,4 @@
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import * as dotenv from 'dotenv';
@@ -10,6 +10,7 @@ import { AuthService } from '../src/modules/auth/application/services/auth.servi
 import { Listing } from '../src/modules/listings/domain/entities/listing.entity';
 import { Booking, BookingStatus } from '../src/modules/bookings/domain/entities/booking.entity';
 import { UserResponseDto } from 'src/modules/user/presentation/dto/user-response.dto';
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 
 dotenv.config({ path: '.env.test' });
 
@@ -31,8 +32,10 @@ describe('Bookings (e2e)', () => {
       imports: [AppModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
+    app = moduleFixture.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
+    app.useGlobalPipes(new ValidationPipe());
     await app.init();
+    await app.getHttpAdapter().getInstance().ready();
 
     dataSource = app.get(DataSource);
     authService = app.get(AuthService);
@@ -47,11 +50,24 @@ describe('Bookings (e2e)', () => {
     seller = await userRepo.save({ email: 'seller@e2e.com', name: 'Seller', role: Role.HOMEOWNER } as User);
     admin = await userRepo.save({ email: 'admin@e2e.com', name: 'Admin', role: Role.ADMIN } as User);
 
+    
+
     buyerToken = (await authService.login({ id: buyer.id, email: buyer.email, name: buyer.name, role: buyer.role, is_email_verified: true } as UserResponseDto)).access_token;
     sellerToken = (await authService.login({ id: seller.id, email: seller.email, name: seller.name, role: seller.role, is_email_verified: true } as UserResponseDto)).access_token;
     adminToken = (await authService.login({ id: admin.id, email: admin.email, name: admin.name, role: admin.role, is_email_verified: true } as UserResponseDto)).access_token;
 
-    listing = await dataSource.getRepository(Listing).save({ title: 'E2E Listing', price: 120, currency: 'ETB', city: 'Addis', address: 'Addr', owner: seller } as Listing);
+
+    listing = await dataSource.getRepository(Listing).save({
+      title: 'E2E Listing',
+      description: 'Test description',
+      price: 120,
+      currency: 'ETB',
+      city: 'Addis',
+      address: 'Addr',
+      owner: seller,
+      transaction_type: 'sell',
+      price_unit: 'total',
+    } as Listing);
   });
 
   afterAll(async () => {

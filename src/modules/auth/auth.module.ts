@@ -8,14 +8,16 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { LocalStrategy } from './infrastructure/strategies/local.strategy';
 import { JwtStrategy } from './infrastructure/strategies/jwt.strategy';
 import { GoogleStrategy } from './infrastructure/strategies/google.strategy';
-import { EmailService } from './infrastructure/adapters/email.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../user/domain/entities/user.entity';
+import { PasswordResetToken } from './domain/entities/password-reset-token.entity';
+import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
     forwardRef(() => UserModule),
-    TypeOrmModule.forFeature([User]),
+    forwardRef(() => EmailModule),
+    TypeOrmModule.forFeature([User, PasswordResetToken]),
     PassportModule,
     ConfigModule,
     JwtModule.registerAsync({
@@ -32,9 +34,9 @@ import { User } from '../user/domain/entities/user.entity';
     LocalStrategy,
     JwtStrategy,
     GoogleStrategy,
-    EmailService,
+
   ],
   controllers: [AuthController],
-  exports: [AuthService, JwtModule, EmailService],
+  exports: [AuthService, JwtModule],
 })
-export class AuthModule {}
+export class AuthModule { }

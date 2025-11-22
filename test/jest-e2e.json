@@ -8,5 +8,7 @@
   },
   "moduleNameMapper": {
     "^src/(.*)$": "<rootDir>/../src/$1"
-  }
+  },
+  "globalSetup": "../src/config/jest-global-setup.ts",
+  "globalTeardown": "../src/config/jest-global-teardown.ts"
 }

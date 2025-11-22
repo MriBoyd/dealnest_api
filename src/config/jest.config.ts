@@ -5,12 +5,12 @@ const config: Config = {
     // Set rootDir to project root (two levels up from this config file)
     rootDir: '../../',
     testEnvironment: 'node',
-    testRegex: '.*\\.spec\\.ts$',
+    testRegex: '.*\.spec\.ts$',
     transform: {
-        '^.+\\.(t|j)s$': 'ts-jest',
+        '^.+\.(t|j)s$': 'ts-jest',
     },
     moduleNameMapper: {
-        '^src/(.*)$': '<rootDir>/src/$1',
+        "^src/(.*)$": "<rootDir>/src/$1",
     },
     coverageDirectory: './coverage',
     verbose: true,

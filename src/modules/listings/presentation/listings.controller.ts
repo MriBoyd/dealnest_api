@@ -30,19 +30,29 @@ export class ListingsController {
   @Post()
   @Roles(Role.HOMEOWNER, Role.CORPORATE_CLIENT, Role.PROFESSIONAL_SELLER)
   async create(@Body() dto: CreateListingDto, @Request() req) {
-    return this.listingsService.create(dto, req.user);
+    const result = await this.listingsService.create(dto, req.user);
+    return result;
   }
 
   @Get()
   async findAll(@Query() filters: FilterListingsDto) {
-    return this.listingsService.findAll(filters);
+    const result = await this.listingsService.findAll(filters);
+    return result;
+  }
+  
+  // find my listings
+  @Get('/me')
+  async findMyListings(@CurrentUser() user: User): Promise<ListingResponseDto[]> {
+    const result = await this.listingsService.findMyListings(user);
+    return result;
   }
 
   @Get(':id')
   async getDetail(
     @Param('id', ParseUUIDPipe) id: string,
   ): Promise<ListingResponseDto> {
-    return this.listingsService.findById(id);
+    const result = await this.listingsService.findById(id);
+    return result;
   }
 
   @Patch(':id/status')
@@ -52,7 +62,8 @@ export class ListingsController {
     @Body() dto: UpdateListingStatusDto,
     @CurrentUser() user: User,
   ) {
-    return this.listingsService.updateStatus(id, dto, user);
+    const result = await this.listingsService.updateStatus(id, dto, user);
+    return result;
   }
 
   @Patch(':id/media')
@@ -62,6 +73,7 @@ export class ListingsController {
     @Body() dto: UpdateListingMediaDto,
     @CurrentUser() user: User,
   ) {
-    return this.listingsService.updateMedia(id, dto, user);
+    const result = await this.listingsService.updateMedia(id, dto, user);
+    return result;
   }
 }

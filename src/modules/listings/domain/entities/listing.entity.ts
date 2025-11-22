@@ -39,13 +39,13 @@ export class Listing {
 
 
   @Column({ length: 255 })
-  title: string;
+  title: string; // e.g 'Apartment in Addis Ababa'
 
-  @Column({ type: 'text', nullable: true })
-  description?: string;
+  @Column({ type: 'text' })
+  description: string; // e.g 'This is a nice apartment in Addis Ababa'
 
   @Column({ type: 'numeric', precision: 14, scale: 2 })
-  price: number;
+  price: number; // e.g 1000
 
   @Column({ length: 10, default: 'ETB' })
   currency: string;
@@ -68,7 +68,7 @@ export class Listing {
   city: string;
 
   @Column({ length: 255 })
-  address: string;
+  address: string; // e.g 'Addis Ababa'
 
   @Column({
     type: 'enum',

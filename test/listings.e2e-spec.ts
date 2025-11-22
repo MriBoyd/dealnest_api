@@ -1,7 +1,8 @@
-import { INestApplication } from '@nestjs/common';
+import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import * as dotenv from 'dotenv';
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { AppModule } from '../src/app.module';
 import { DataSource } from 'typeorm';
 import { User } from '../src/modules/user/domain/entities/user.entity';
@@ -29,8 +30,11 @@ describe('Listings (e2e)', () => {
       imports: [AppModule],
     }).compile();
 
-    app = moduleFixture.createNestApplication();
+    app = moduleFixture.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
+    app.useGlobalPipes(new ValidationPipe());
+    // ...existing code...
     await app.init();
+    await app.getHttpAdapter().getInstance().ready();
 
     dataSource = app.get(DataSource);
     authService = app.get(AuthService);
@@ -58,7 +62,7 @@ describe('Listings (e2e)', () => {
     const upload = async () => request(app.getHttpServer())
       .post('/media/upload-url')
       .set('Authorization', `Bearer ${sellerToken}`)
-      .send({ base64: Buffer.from('abc').toString('base64'), filename: 'file.jpg' })
+      .send({ base64: Buffer.from('abc').toString('base64'), filename: 'file.jpg', mimetype: 'image/jpeg' })
       .expect(201);
 
     const r1 = await upload();
@@ -134,7 +138,7 @@ describe('Listings (e2e)', () => {
     const upload = async () => request(app.getHttpServer())
       .post('/media/upload-url')
       .set('Authorization', `Bearer ${sellerToken}`)
-      .send({ base64: Buffer.from('def').toString('base64'), filename: 'file2.jpg' })
+      .send({ base64: Buffer.from('def').toString('base64'), filename: 'file2.jpg', mimetype: 'image/jpeg' })
       .expect(201);
 
     const r1 = await upload();

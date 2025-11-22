@@ -12,7 +12,9 @@ import { Repository } from 'typeorm';
 import { User } from '../../domain/entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomBytes } from 'crypto';
-import { EmailService } from '../../../auth/infrastructure/adapters/email.service';
+import { EmailService as AppEmailService } from '../../../email/application/services/email.service';
+// Email verification responsibilities moved to dedicated module/service
+// import { EmailService } from '../../../auth/infrastructure/adapters/email.service';
 import { plainToInstance } from 'class-transformer';
 import { UserResponseDto } from '../../presentation/dto/user-response.dto';
 import { UserMapper } from '../mappers/user.mapper';
@@ -28,7 +30,8 @@ export class UserService {
 	constructor(
 		@InjectRepository(User)
 		private readonly userRepo: Repository<User>,
-		private emailService: EmailService,
+		// Inject new dedicated email verification service
+		private readonly emailService: AppEmailService,
 	) { }
 
 	async createUser(
@@ -88,70 +91,15 @@ export class UserService {
 		});
 
 		if (password) {
-			await this.generateEmailVerificationToken(user);
+			   await this.emailService.generateAndSendVerificationToken(user);
 		}
 
 		const saved = await this.userRepo.save(user);
 		return UserMapper.toResponse(saved);
 	}
 
-	async generateEmailVerificationToken(user: User) {
-		const token = randomBytes(32).toString('hex');
-		const expires = new Date(Date.now() + 1000 * 60 * 60);
-
-		user.email_verification_token = token;
-		user.email_verification_expires = expires;
-		await this.userRepo.save(user);
-
-		await this.emailService.sendVerificationEmail(user.email, token);
-	}
-
-	// use email and token to verify
-	async verifyEmail(email: string, token: string) {
-		const user = await this.findUserByEmail(email);
-
-		if (!user) throw new NotFoundException('Invalid token');
-		if (
-			!user.email_verification_expires ||
-			user.email_verification_expires < new Date()
-		) {
-			throw new BadRequestException('Token expired');
-		}
-
-		user.is_email_verified = true;
-		user.email_verification_token = null;
-		user.email_verification_expires = null;
-		await this.userRepo.save(user);
-
-		return { message: 'Email verified successfully' };
-	}
-
-	async resendVerificationEmail(email: string): Promise<void> {
-		const user = await this.findUserByEmail(email);
-		if (!user) throw new NotFoundException('User not found');
-
-		if (user.is_email_verified) {
-			throw new BadRequestException('Email already verified');
-		}
-
-		const now = new Date();
-		if (
-			user.last_verification_email_sent &&
-			now.getTime() - user.last_verification_email_sent.getTime() <
-			10 * 60 * 1000
-		) {
-			throw new BadRequestException('Please wait before requesting again');
-		}
-
-		const token = randomBytes(32).toString('hex');
-		user.email_verification_token = token;
-		user.email_verification_expires = new Date(Date.now() + 1000 * 60 * 60); // 1 hour
-		user.last_verification_email_sent = now;
-		await this.userRepo.save(user);
-
-		// Send email
-		await this.emailService.sendVerificationEmail(user.email, token);
-	}
+	// Email verification logic has been extracted to EmailVerificationService.
+	// Legacy methods removed for a cleaner, single‑responsibility UserService.
 
 	async update(id: string, attrs: Partial<User>): Promise<User> {
 		const user = await this.findUserById(id);

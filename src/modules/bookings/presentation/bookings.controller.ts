@@ -21,12 +21,14 @@ export class BookingsController {
 
   @Post()
   async create(@Body() dto: CreateBookingDto, @CurrentUser() user: User) {
-    return this.bookingsService.create(dto, user);
+    const result = await this.bookingsService.create(dto, user);
+    return result;
   }
 
   @Get()
   async findUserBookings(@CurrentUser() user: User) {
-    return this.bookingsService.findUserBookings(user);
+    const result = await this.bookingsService.findUserBookings(user);
+    return result;
   }
 
   @Patch(':id/status')
@@ -35,12 +37,14 @@ export class BookingsController {
     @Body() dto: UpdateBookingStatusDto,
     @CurrentUser() user: User,
   ) {
-    return this.bookingsService.updateStatus(id, dto, user);
+    const result = await this.bookingsService.updateStatus(id, dto, user);
+    return result;
   }
 
   @Get('seller')
   getSellerBookings(@CurrentUser() user: User) {
-    return this.bookingsService.findSellerBookings(user);
+    const result = this.bookingsService.findSellerBookings(user);
+    return result;
   }
 
   @Patch(':id/cancel')
@@ -48,7 +52,8 @@ export class BookingsController {
     @Param('id') id: string,
     @CurrentUser() user: User,
   ) {
-    return this.bookingsService.cancelBooking(id, user);
+    const result = await this.bookingsService.cancelBooking(id, user);
+    return result;
   }
 
   @Get(':id')
@@ -56,6 +61,7 @@ export class BookingsController {
     @Param('id') id: string,
     @CurrentUser() user: User,
   ) {
-    return this.bookingsService.getBookingDetail(id, user);
+    const result = await this.bookingsService.getBookingDetail(id, user);
+    return result;
   }
 }

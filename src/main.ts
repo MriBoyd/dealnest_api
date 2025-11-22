@@ -1,27 +1,23 @@
+
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
-
-import { createAdapter } from 'socket.io-redis';
 import { IoAdapter } from '@nestjs/platform-socket.io';
-import {
-  FastifyAdapter,
-  NestFastifyApplication,
-} from '@nestjs/platform-fastify';
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 
 async function bootstrap() {
+  const fastifyAdapter = new FastifyAdapter({ bodyLimit: 50 * 1024 * 1024 });
+  // Register Fastify plugins for body parsing and multipart
+  await fastifyAdapter.register(require('@fastify/formbody'));
+  await fastifyAdapter.register(require('@fastify/multipart'));
+
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    // 50mb
-    new FastifyAdapter({ bodyLimit: 50 * 1024 * 1024 }),
+    fastifyAdapter,
   );
 
-  const redisHost = process.env.REDIS_HOST || '127.0.0.1';
-  const redisPort = Number(process.env.REDIS_PORT || 6379);
-  // @ts-ignore
-  const ioAdapter = new IoAdapter(app);
-  // @ts-ignore
+  app.useWebSocketAdapter(new IoAdapter(app.getHttpServer()));
   app.useGlobalPipes(new ValidationPipe());
 
   const options = new DocumentBuilder()

@@ -1,34 +1,48 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { UserService } from '../../application/services/user.service';
 import { User } from '../../domain/entities/user.entity';
 import { testDatabaseConfig } from '../../../../config/test-database.config';
 import { CreateUserDto } from '../../presentation/dto/create-user.dto';
 import { Role } from '../../../../common/enums/role.enum';
-import { EmailService } from '../../../auth/infrastructure/adapters/email.service';
 import { ConflictException } from '@nestjs/common';
+import { EmailService } from 'src/modules/email/application/services/email.service';
+import { EmailVerification } from 'src/modules/email/domain/entities/email-verification.entity';
+import { TestUtils } from 'src/test/test-utils';
+import { Listing } from 'src/modules/listings/domain/entities/listing.entity';
+import { Review } from 'src/modules/reviews/domain/entities/review.entity';
+import { AuthService } from 'src/modules/auth/application/services/auth.service';
+import { JwtModule } from '@nestjs/jwt';
+import { Mailer } from 'src/modules/email/application/services/mailer';
+import { PasswordResetToken } from 'src/modules/auth/domain/entities/password-reset-token.entity';
 
 class MockEmailService {
-	sendVerificationEmail = jest.fn().mockResolvedValue(undefined);
+	generateAndSendVerificationToken = jest.fn().mockResolvedValue(undefined);
 }
 
 describe('UserService (Integration)', () => {
 	let service: UserService;
 	let module: TestingModule;
+	let testUtils: TestUtils; // Declare testUtils
 
 	beforeAll(async () => {
 		module = await Test.createTestingModule({
 			imports: [
-				TypeOrmModule.forRoot(testDatabaseConfig),
-				TypeOrmModule.forFeature([User]),
+				TypeOrmModule.forRoot(testDatabaseConfig as TypeOrmModuleOptions),
+				TypeOrmModule.forFeature([User, EmailVerification, Listing, Review, PasswordResetToken]),
+				JwtModule.register({ secret: 'testsecret' }),
 			],
 			providers: [
 				UserService,
+				AuthService,
 				{ provide: EmailService, useClass: MockEmailService },
+				{ provide: Mailer, useValue: { sendPasswordResetEmail: jest.fn() } },
+				TestUtils, // Add TestUtils to providers
 			],
 		}).compile();
 
 		service = module.get<UserService>(UserService);
+		testUtils = module.get<TestUtils>(TestUtils); // Get TestUtils instance
 	});
 
 	afterAll(async () => {
@@ -36,9 +50,7 @@ describe('UserService (Integration)', () => {
 	});
 
 	beforeEach(async () => {
-		// Clear the users table before each test
-		const repository = service['userRepo'];
-		await repository.query('TRUNCATE "users" RESTART IDENTITY CASCADE;');
+		await testUtils.reloadFixtures(); // Use reloadFixtures from TestUtils
 	});
 
 	it('should create a user and save to the database', async () => {

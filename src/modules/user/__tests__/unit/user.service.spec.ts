@@ -10,7 +10,7 @@ import {
 import * as bcrypt from 'bcrypt';
 import { UserService } from '../../application/services/user.service';
 import { User } from '../../domain/entities/user.entity';
-import { EmailService } from '../../../auth/infrastructure/adapters/email.service';
+import { EmailService } from '../../../email/application/services/email.service';
 import { CreateUserDto } from '../../presentation/dto/create-user.dto';
 import { Role } from '../../../../common/enums/role.enum';
 import { UserResponseDto } from '../../presentation/dto/user-response.dto';
@@ -19,7 +19,7 @@ import { UpdateProfileDto } from '../../presentation/dto/update-profile.dto';
 import { ChangePasswordDto } from '../../presentation/dto/change-password.dto';
 
 jest.mock('bcrypt');
-jest.mock('../../../auth/infrastructure/adapters/email.service');
+jest.mock('../../../email/application/services/email.service');
 jest.mock('../../application/mappers/user.mapper');
 
 describe('UserService', () => {
@@ -33,6 +33,11 @@ describe('UserService', () => {
     save: jest.fn(),
     remove: jest.fn(),
   };
+  const mockEmailService = {
+    verifyEmail: jest.fn(),
+    resendVerificationEmail: jest.fn(),
+    generateAndSendVerificationToken: jest.fn(),
+  };
 
   beforeEach(async () => {
     jest.clearAllMocks();
@@ -43,7 +48,10 @@ describe('UserService', () => {
           provide: getRepositoryToken(User),
           useValue: mockUserRepo,
         },
-        EmailService,
+        {
+          provide: EmailService,
+          useValue: mockEmailService,
+        },
       ],
     }).compile();
 
@@ -81,7 +89,7 @@ describe('UserService', () => {
       expect(bcrypt.hash).toHaveBeenCalledWith('password123', 10);
       expect(mockUserRepo.create).toHaveBeenCalled();
       expect(mockUserRepo.save).toHaveBeenCalled();
-      expect(emailService.sendVerificationEmail).toHaveBeenCalled();
+      expect(emailService.generateAndSendVerificationToken).toHaveBeenCalled();
     });
 
     it('should throw ConflictException if user already exists', async () => {
@@ -99,41 +107,7 @@ describe('UserService', () => {
     });
   });
 
-  describe('verifyEmail', () => {
-    it('should verify email successfully', async () => {
-      const user = {
-        email: 'test@example.com',
-        email_verification_token: 'token',
-        email_verification_expires: new Date(Date.now() + 1000 * 60 * 60),
-      };
-      mockUserRepo.findOne.mockResolvedValue(user);
-      mockUserRepo.save.mockResolvedValue({ ...user, is_email_verified: true });
-
-      const result = await service.verifyEmail('test@example.com', 'token');
-      expect(result).toEqual({ message: 'Email verified successfully' });
-      // Optionally, you can check that mockUserRepo.save was called with is_email_verified: true
-      expect(mockUserRepo.save).toHaveBeenCalledWith(expect.objectContaining({ is_email_verified: true }));
-    });
-
-    it('should throw NotFoundException for invalid token', async () => {
-      mockUserRepo.findOne.mockResolvedValue(null);
-      await expect(service.verifyEmail('test@example.com', 'token')).rejects.toThrow(
-        NotFoundException,
-      );
-    });
-
-    it('should throw BadRequestException for expired token', async () => {
-        const user = {
-            email: 'test@example.com',
-            email_verification_token: 'token',
-            email_verification_expires: new Date(Date.now() - 1000 * 60 * 60),
-          };
-      mockUserRepo.findOne.mockResolvedValue(user);
-      await expect(service.verifyEmail('test@example.com', 'token')).rejects.toThrow(
-        BadRequestException,
-      );
-    });
-  });
+  // Email verification is now handled by EmailService, not UserService.
 
   describe('updateProfile', () => {
     const userId = '1';

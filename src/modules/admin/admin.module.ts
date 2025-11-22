@@ -12,30 +12,32 @@ import { Booking } from '../bookings/domain/entities/booking.entity';
 import { AdSlot } from '../ads/domain/entities/ad_slot.entity';
 import { AdminAdsController } from './presentation/admin-ads.controller';
 import { AdminKycController } from './presentation/admin-kyc.controller';
+import { AdminKycService } from './application/services/admin-kyc.service';
 import { KycModule } from '../kyc/kyc.module';
 import { Kyc } from '../kyc/domain/entities/kyc.entity';
 import { AdsModule } from '../ads/ads.module';
 import { AdminReviewsController } from './presentation/admin-reviews.controller';
 import { Review } from '../reviews/domain/entities/review.entity';
 import { ReviewsModule } from '../reviews/reviews.module';
+import { User } from '../user/domain/entities/user.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([AdminAction, Listing, Booking, Kyc, AdSlot, Review]),
-    UserModule,
-    ListingsModule,
-    BookingsModule,
-    KycModule,
-    AdsModule,
-    ReviewsModule
-  ],
-  controllers: [
-    AdminListingsController, 
-    AdminBookingsController,
-    AdminKycController,
-    AdminAdsController,
-    AdminReviewsController
-  ],
-  providers: [AdminListingsService],
+	imports: [
+		TypeOrmModule.forFeature([AdminAction, Listing, Booking, Kyc, AdSlot, Review, User]),
+		UserModule,
+		ListingsModule,
+		BookingsModule,
+		KycModule,
+		AdsModule,
+		ReviewsModule,
+	],
+	controllers: [
+		AdminListingsController,
+		AdminBookingsController,
+		AdminKycController,
+		AdminAdsController,
+		AdminReviewsController
+	],
+	providers: [AdminListingsService, AdminKycService],
 })
-export class AdminModule {}
+export class AdminModule { }

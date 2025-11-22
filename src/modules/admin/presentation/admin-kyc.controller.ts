@@ -8,28 +8,28 @@ import {
   UseGuards,
   Query,
 } from '@nestjs/common';
-import { KycService } from 'src/modules/kyc/application/services/kyc.service';
-import { KycStatus } from 'src/modules/user/domain/entities/user.entity';
+import { AdminKycService } from '../application/services/admin-kyc.service';
 import { JwtAuthGuard } from 'src/modules/auth/infrastructure/guards/jwt-auth.guard';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from 'src/common/enums/role.enum';
 import { RolesGuard } from 'src/common/guards/roles.guard';
 import { FilterKycDto } from 'src/modules/kyc/presentation/dto/filter-kyc.dto';
+import { KycStatus } from 'src/modules/user/domain/enums/kyc-status.enum';
 
 @Controller('admin/kyc')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(Role.ADMIN)
 export class AdminKycController {
-  constructor(private readonly kycService: KycService) {}
+  constructor(private readonly adminKycService: AdminKycService) {}
 
   @Get('pending')
-  async listPending(@Query() filters: FilterKycDto) {
-    return this.kycService.listPending(filters);
+  async listPending(@Query('page') page = 1, @Query('limit') limit = 10) {
+    return this.adminKycService.listPending(Number(page), Number(limit));
   }
 
   @Get(':id')
   async getKycDetails(@Param('id') id: string) {
-    return this.kycService.getKycDetails(id);
+    return this.adminKycService.getKycDetails(id);
   }
 
   @Patch(':id')
@@ -37,6 +37,6 @@ export class AdminKycController {
     @Param('id') id: string,
     @Body() body: { status: KycStatus; notes?: string },
   ) {
-    return this.kycService.updateStatus(id, body.status, body.notes);
+    return this.adminKycService.updateStatus(id, body.status, body.notes);
   }
 }

@@ -49,26 +49,7 @@ export class AuthController {
     return { message: 'Logout successful' };
   }
 
-  @Get('verify-email')
-  async verifyEmail(
-    @Query('email') email: string,
-    @Query('token') token: string,
-  ) {
-    return this.userService.verifyEmail(email, token);
-  }
-
-  @Post('resend-verification')
-  @Throttle({ default: { limit: 5, ttl: 60 } }) // 5 requests / 60 seconds
-  async resendVerification(@Body('email') email: string) {
-    const user = await this.userService.findUserByEmail(email);
-    if (!user) {
-      // security: do not reveal user existence
-      return { message: 'If this email exists, a verification link was sent' };
-    }
-
-    await this.userService.resendVerificationEmail(user.id);
-    return { message: 'Verification email resent (if not already verified)' };
-  }
+  // Email verification endpoints moved to EmailVerificationController
 
   @Get('google')
   @UseGuards(AuthGuard('google'))

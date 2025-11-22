@@ -1,26 +1,33 @@
-import { INestApplication } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import request from 'supertest';
 import * as dotenv from 'dotenv';
 import { AppModule } from '../src/app.module';
-import { EmailService } from '../src/modules/auth/infrastructure/adapters/email.service';
 import { Role } from '../src/common/enums/role.enum';
+import { EmailService } from '../src/modules/email/application/services/email.service';
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 
 dotenv.config({ path: '.env.test' });
 
 describe('Auth (e2e)', () => {
-  let app: INestApplication;
+  let app: NestFastifyApplication;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [AppModule],
     })
       .overrideProvider(EmailService)
-      .useValue({ sendVerificationEmail: jest.fn(), sendPasswordResetEmail: jest.fn() })
+      .useValue({
+        sendVerificationEmail: jest.fn(),
+        sendPasswordResetEmail: jest.fn(),
+        generateAndSendVerificationToken: jest.fn(),
+      })
       .compile();
 
-    app = moduleFixture.createNestApplication();
+    app = moduleFixture.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
+    app.useGlobalPipes(new ValidationPipe());
     await app.init();
+    await app.getHttpAdapter().getInstance().ready();
   });
 
   afterAll(async () => {
