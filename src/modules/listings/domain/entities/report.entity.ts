@@ -5,6 +5,8 @@ import { User } from '../../../user/domain/entities/user.entity';
 export enum ReportStatus {
   PENDING = 'Pending',
   RESOLVED = 'Resolved',
+  APPROVED = 'Approved',
+  REJECTED = 'Rejected',
 }
 
 @Entity('reports')

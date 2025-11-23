@@ -20,24 +20,37 @@ import { AdminReviewsController } from './presentation/admin-reviews.controller'
 import { Review } from '../reviews/domain/entities/review.entity';
 import { ReviewsModule } from '../reviews/reviews.module';
 import { User } from '../user/domain/entities/user.entity';
+import { AdminReportsController } from './presentation/admin-reports.controller';
+import { AdminReportsService } from './application/services/admin-reports.service';
+import { Report } from '../listings/domain/entities/report.entity';
 
 @Module({
-	imports: [
-		TypeOrmModule.forFeature([AdminAction, Listing, Booking, Kyc, AdSlot, Review, User]),
-		UserModule,
-		ListingsModule,
-		BookingsModule,
-		KycModule,
-		AdsModule,
-		ReviewsModule,
-	],
-	controllers: [
-		AdminListingsController,
-		AdminBookingsController,
-		AdminKycController,
-		AdminAdsController,
-		AdminReviewsController
-	],
-	providers: [AdminListingsService, AdminKycService],
+  imports: [
+    TypeOrmModule.forFeature([
+      AdminAction,
+      Listing,
+      Booking,
+      Kyc,
+      AdSlot,
+      Review,
+      User,
+      Report,
+    ]),
+    UserModule,
+    ListingsModule,
+    BookingsModule,
+    KycModule,
+    AdsModule,
+    ReviewsModule,
+  ],
+  controllers: [
+    AdminListingsController,
+    AdminBookingsController,
+    AdminKycController,
+    AdminAdsController,
+    AdminReviewsController,
+    AdminReportsController,
+  ],
+  providers: [AdminListingsService, AdminKycService, AdminReportsService],
 })
-export class AdminModule { }
+export class AdminModule {}
