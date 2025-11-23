@@ -20,6 +20,12 @@ import { Mailer } from 'src/modules/email/application/services/mailer';
 import { PasswordResetToken } from 'src/modules/auth/domain/entities/password-reset-token.entity';
 import { EmailService } from 'src/modules/email/application/services/email.service';
 import { ConfigService } from '@nestjs/config';
+import { Category } from '../../domain/entities/category.entity';
+import { RealEstateAttribute } from '../../domain/entities/real-estate.entity';
+import { VehicleAttribute } from '../../domain/entities/vehicle.entity';
+import { CreateListingDto } from '../../presentation/dto/create-listing.dto';
+import { PriceUnit } from '../../domain/enums/price-unit.enum';
+import { TransactionType } from '../../domain/enums/transaction-type.enum';
 
 
 describe('ListingsService (Integration)', () => {
@@ -27,6 +33,7 @@ describe('ListingsService (Integration)', () => {
   let userRepo: Repository<User>;
   let listingRepo: Repository<Listing>;
   let imageRepo: Repository<ListingImage>;
+  let categoryRepo: Repository<Category>;
   let moduleRef: TestingModule; // Declare moduleRef
   let testUtils: TestUtils; // Declare testUtils
 
@@ -34,7 +41,10 @@ describe('ListingsService (Integration)', () => {
     moduleRef = await Test.createTestingModule({
       imports: [
         TypeOrmModule.forRoot(testDatabaseConfig as TypeOrmModuleOptions),
-        TypeOrmModule.forFeature([Listing, ListingImage, User, Review, PasswordResetToken, EmailVerification]),
+        TypeOrmModule.forFeature([
+          Listing, ListingImage, User, Review, PasswordResetToken, EmailVerification,
+          Category, RealEstateAttribute, VehicleAttribute
+        ]),
       ],
       providers: [
         ListingsService,
@@ -60,6 +70,7 @@ describe('ListingsService (Integration)', () => {
     userRepo = moduleRef.get(getRepositoryToken(User));
     listingRepo = moduleRef.get(getRepositoryToken(Listing));
     imageRepo = moduleRef.get(getRepositoryToken(ListingImage));
+    categoryRepo = moduleRef.get(getRepositoryToken(Category));
     testUtils = moduleRef.get<TestUtils>(TestUtils); // Get TestUtils instance
 
     await testUtils.reloadFixtures(); // Use TestUtils to clear database
@@ -77,12 +88,13 @@ describe('ListingsService (Integration)', () => {
     const seller = await userRepo.save({ email: 'seller@t.com', name: 'Seller', role: Role.HOMEOWNER } as User);
     const img1 = await imageRepo.save({ imageUrl: 'u1.jpg', isPrimary: false } as ListingImage);
     const img2 = await imageRepo.save({ imageUrl: 'u2.jpg', isPrimary: true } as ListingImage);
-
-    const dto: any = {
+    const category = await categoryRepo.save({ name: 'Real Estate', slug: 'real-estate' });
+    const dto: CreateListingDto = {
       title: 'House', description: 'Nice', price: 123, currency: 'ETB',
-      city: 'Addis', address: 'Somewhere', transaction_type: 'sell', price_unit: 'total', imageIds: [img1.id, img2.id],
+      city: 'Addis', address: 'Somewhere', transaction_type: TransactionType.SELL, price_unit: PriceUnit.TOTAL, imageIds: [img1.id, img2.id],
+      categoryId: category.id,
+      propertyType: 'Apartment' // Required for RealEstateAttribute
     };
-
     const res = await service.create(dto, seller);
     expect(res.id).toBeDefined();
     const saved = await listingRepo.findOne({ where: { id: res.id }, relations: ['images'] });

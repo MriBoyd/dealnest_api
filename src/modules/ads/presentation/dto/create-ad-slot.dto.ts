@@ -1,4 +1,4 @@
-import { IsUUID, IsString, IsNumber, IsDateString, IsIn } from 'class-validator';
+import { IsUUID, IsNumber, IsDateString, IsIn } from 'class-validator';
 
 export class CreateAdSlotDto {
     @IsUUID()

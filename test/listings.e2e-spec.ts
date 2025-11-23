@@ -24,6 +24,7 @@ describe('Listings (e2e)', () => {
   let admin: User;
   let sellerToken: string;
   let adminToken: string;
+  let category: any;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -32,42 +33,45 @@ describe('Listings (e2e)', () => {
 
     app = moduleFixture.createNestApplication<NestFastifyApplication>(new FastifyAdapter());
     app.useGlobalPipes(new ValidationPipe());
-    // ...existing code...
     await app.init();
     await app.getHttpAdapter().getInstance().ready();
 
     dataSource = app.get(DataSource);
     authService = app.get(AuthService);
-
+  });
+  // removed duplicate 'let category;'
+  let listing;
+  let image1;
+  let image2;
+  beforeEach(async () => {
     // Clean tables
     await dataSource.getRepository(ListingImage).query('TRUNCATE TABLE "listing_images" RESTART IDENTITY CASCADE;');
     await dataSource.getRepository(Listing).query('TRUNCATE TABLE "listings" CASCADE;');
     await dataSource.getRepository(User).query('TRUNCATE TABLE "users" CASCADE;');
+    await dataSource.getRepository(require('../src/modules/listings/domain/entities/category.entity').Category).query('TRUNCATE TABLE "categories" RESTART IDENTITY CASCADE;');
 
     const userRepo = dataSource.getRepository(User);
-
     seller = await userRepo.save({ email: 'seller@e2e.com', name: 'Seller', role: Role.HOMEOWNER } as User);
     admin = await userRepo.save({ email: 'admin@e2e.com', name: 'Admin', role: Role.ADMIN } as User);
 
     sellerToken = (await authService.login({ id: seller.id, email: seller.email, name: seller.name, role: seller.role, is_email_verified: true } as UserResponseDto)).access_token;
     adminToken = (await authService.login({ id: admin.id, email: admin.email, name: admin.name, role: admin.role, is_email_verified: true } as UserResponseDto)).access_token;
-  });
 
-  afterAll(async () => {
-    await app.close();
-  });
+    const categoryRepo = dataSource.getRepository(require('../src/modules/listings/domain/entities/category.entity').Category);
+    category = await categoryRepo.save({ name: 'Real Estate', slug: 'real-estate' });
 
-  it('POST /listings creates a listing', async () => {
-    // create two media first
+    // Create two media
     const upload = async () => request(app.getHttpServer())
       .post('/media/upload-url')
       .set('Authorization', `Bearer ${sellerToken}`)
       .send({ base64: Buffer.from('abc').toString('base64'), filename: 'file.jpg', mimetype: 'image/jpeg' })
       .expect(201);
-
     const r1 = await upload();
     const r2 = await upload();
+    image1 = r1.body;
+    image2 = r2.body;
 
+    // Create a listing for all tests
     const res = await request(app.getHttpServer())
       .post('/listings')
       .set('Authorization', `Bearer ${sellerToken}`)
@@ -79,13 +83,22 @@ describe('Listings (e2e)', () => {
         price_unit: 'total',
         city: 'Addis',
         address: 'Addr',
-        imageIds: [r1.body.id, r2.body.id],
+        imageIds: [image1.id, image2.id],
+        categoryId: category.id,
+        propertyType: 'Apartment'
       })
       .expect(201);
+    listing = res.body;
+  });
 
-    expect(res.body.id).toBeDefined();
-    expect(Array.isArray(res.body.images)).toBe(true);
-    expect(res.body.images.length).toBe(2);
+  afterAll(async () => {
+    await app.close();
+  });
+
+  it('POST /listings creates a listing', async () => {
+    expect(listing.id).toBeDefined();
+    expect(Array.isArray(listing.images)).toBe(true);
+    expect(listing.images.length).toBe(2);
   });
 
   it('GET /listings lists with pagination', async () => {
@@ -100,30 +113,24 @@ describe('Listings (e2e)', () => {
   });
 
   it('GET /listings/:id returns details', async () => {
-    const repo = dataSource.getRepository(Listing);
-    const listing = await repo.findOne({ where: {}, order: { created_at: 'DESC' } });
-
     const res = await request(app.getHttpServer())
-      .get(`/listings/${listing!.id}`)
+      .get(`/listings/${listing.id}`)
       .set('Authorization', `Bearer ${sellerToken}`)
       .expect(200);
 
-    expect(res.body.id).toBe(listing!.id);
+    expect(res.body.id).toBe(listing.id);
     expect(res.body.title).toBeDefined();
   });
 
   it('PATCH /listings/:id/status forbids non-admin and allows admin', async () => {
-    const repo = dataSource.getRepository(Listing);
-    const listing = await repo.findOne({ where: {}, order: { created_at: 'DESC' } });
-
     await request(app.getHttpServer())
-      .patch(`/listings/${listing!.id}/status`)
+      .patch(`/listings/${listing.id}/status`)
       .set('Authorization', `Bearer ${sellerToken}`)
       .send({ status: 'approved' })
       .expect(403);
 
     const ok = await request(app.getHttpServer())
-      .patch(`/listings/${listing!.id}/status`)
+      .patch(`/listings/${listing.id}/status`)
       .set('Authorization', `Bearer ${adminToken}`)
       .send({ status: 'approved' })
       .expect(200);
@@ -132,22 +139,10 @@ describe('Listings (e2e)', () => {
   });
 
   it('PATCH /listings/:id/media updates images', async () => {
-    const repo = dataSource.getRepository(Listing);
-    const listing = await repo.findOne({ where: {}, order: { created_at: 'DESC' } });
-
-    const upload = async () => request(app.getHttpServer())
-      .post('/media/upload-url')
-      .set('Authorization', `Bearer ${sellerToken}`)
-      .send({ base64: Buffer.from('def').toString('base64'), filename: 'file2.jpg', mimetype: 'image/jpeg' })
-      .expect(201);
-
-    const r1 = await upload();
-    const r2 = await upload();
-
     const res = await request(app.getHttpServer())
-      .patch(`/listings/${listing!.id}/media`)
+      .patch(`/listings/${listing.id}/media`)
       .set('Authorization', `Bearer ${sellerToken}`)
-      .send({ imageIds: [r1.body.id, r2.body.id] })
+      .send({ imageIds: [image1.id, image2.id] })
       .expect(200);
 
     expect(res.body.images.length).toBe(2);

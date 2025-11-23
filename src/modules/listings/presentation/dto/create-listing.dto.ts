@@ -1,9 +1,14 @@
-import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsArray, IsInt, Min } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, IsArray, IsInt, Min, isUUID, IsUUID } from 'class-validator';
 import { Type } from 'class-transformer';
 import { TransactionType } from '../../domain/enums/transaction-type.enum';
 import { PriceUnit } from '../../domain/enums/price-unit.enum';
 
+
 export class CreateListingDto {
+  @IsString()
+  @IsNotEmpty()
+  @IsUUID()
+  categoryId: string;
 
   @IsString()
   @IsNotEmpty()
@@ -40,4 +45,61 @@ export class CreateListingDto {
   @Type(() => Number)
   @IsInt({ each: true })
   imageIds?: number[];
+
+  // Real estate attributes
+  @IsOptional()
+  @IsString()
+  propertyType?: string;
+
+  @IsOptional()
+  @IsNumber()
+  areaSqm?: number;
+
+  @IsOptional()
+  @IsInt()
+  bedrooms?: number;
+
+  @IsOptional()
+  @IsInt()
+  bathrooms?: number;
+
+  @IsOptional()
+  @IsInt()
+  floorLevel?: number;
+
+  @IsOptional()
+  furnished?: boolean;
+
+  // Vehicle attributes
+  @IsOptional()
+  @IsString()
+  make?: string;
+
+  @IsOptional()
+  @IsString()
+  model?: string;
+
+  @IsOptional()
+  @IsInt()
+  year?: number;
+
+  @IsOptional()
+  @IsInt()
+  mileageKm?: number;
+
+  @IsOptional()
+  @IsString()
+  transmission?: string;
+
+  @IsOptional()
+  @IsString()
+  fuelType?: string;
+
+  @IsOptional()
+  @IsString()
+  color?: string;
+
+  @IsOptional()
+  @IsString()
+  condition?: string;
 }

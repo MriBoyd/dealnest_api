@@ -12,6 +12,9 @@ import { UpdateListingMediaDto } from '../../../listings/presentation/dto/update
 import { User } from 'src/modules/user/domain/entities/user.entity';
 import { TransactionType } from '../../domain/enums/transaction-type.enum';
 import { PriceUnit } from '../../domain/enums/price-unit.enum';
+import { Category } from '../../../listings/domain/entities/category.entity';
+import { RealEstateAttribute } from '../../../listings/domain/entities/real-estate.entity';
+import { VehicleAttribute } from '../../../listings/domain/entities/vehicle.entity';
 
 
 describe('ListingsService (Unit)', () => {
@@ -25,6 +28,9 @@ describe('ListingsService (Unit)', () => {
 				ListingsService,
 				{ provide: getRepositoryToken(Listing), useValue: createRepoMock<Listing>() },
 				{ provide: getRepositoryToken(ListingImage), useValue: createRepoMock<ListingImage>() },
+				{ provide: getRepositoryToken(Category), useValue: createRepoMock<Category>() },
+				{ provide: getRepositoryToken(RealEstateAttribute), useValue: createRepoMock<RealEstateAttribute>() },
+				{ provide: getRepositoryToken(VehicleAttribute), useValue: createRepoMock<VehicleAttribute>() },
 				{ provide: (require('typeorm').DataSource), useValue: { query: jest.fn().mockResolvedValue([]) } },
 			],
 		}).compile();
@@ -87,7 +93,7 @@ describe('ListingsService (Unit)', () => {
 		listingRepo.findOne.mockResolvedValue({ id: 'l1', owner: { id: 'o1', email: 'o@test.com', name: 'Owner', role: Role.HOMEOWNER } as User, images: [] as ListingImage[] } as Listing);
 
 		await expect(
-			service.create({ title: 'T', description: 'D', price: 10, transaction_type: 'sell' as TransactionType, price_unit: 'total' as PriceUnit, city: 'Addis', address: 'Addr', imageIds: [1] }, { id: 'o1' } as User),
+			service.create({ title: 'T', description: 'D', price: 10, transaction_type: 'sell' as TransactionType, price_unit: 'total' as PriceUnit, city: 'Addis', address: 'Addr', imageIds: [1], categoryId: 'c1' }, { id: 'o1' } as User),
 		).rejects.toBeInstanceOf(BadRequestException);
 	});
 

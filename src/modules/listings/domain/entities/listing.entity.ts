@@ -37,7 +37,6 @@ export class Listing {
   @JoinColumn({ name: 'category_id' })
   category: Category;
 
-
   @Column({ length: 255 })
   title: string; // e.g 'Apartment in Addis Ababa'
 

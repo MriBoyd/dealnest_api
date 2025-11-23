@@ -7,6 +7,9 @@ import {
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
 import { Listing } from '../../domain/entities/listing.entity';
+import { Category } from '../../domain/entities/category.entity';
+import { RealEstateAttribute } from '../../domain/entities/real-estate.entity';
+import { VehicleAttribute } from '../../domain/entities/vehicle.entity';
 import { CreateListingDto } from '../../presentation/dto/create-listing.dto';
 import { User } from '../../../user/domain/entities/user.entity';
 import { ListingMapper } from '../mappers/listing.mapper';
@@ -25,6 +28,12 @@ export class ListingsService {
 		private readonly listingsRepository: Repository<Listing>,
 		@InjectRepository(ListingImage)
 		private readonly imagesRepository: Repository<ListingImage>,
+		@InjectRepository(Category)
+		private readonly categoryRepository: Repository<Category>,
+		@InjectRepository(RealEstateAttribute)
+		private readonly realEstateRepository: Repository<RealEstateAttribute>,
+		@InjectRepository(VehicleAttribute)
+		private readonly vehicleRepository: Repository<VehicleAttribute>,
 		@InjectDataSource()
 		private readonly dataSource: DataSource,
 	) { }
@@ -43,6 +52,12 @@ export class ListingsService {
 		dto: CreateListingDto,
 		owner: User,
 	): Promise<ListingResponseDto> {
+		// Find category
+		const category = await this.categoryRepository.findOne({ where: { id: dto.categoryId } });
+		if (!category) {
+			throw new BadRequestException('Invalid category');
+		}
+
 		const listing = this.listingsRepository.create({
 			owner,
 			title: dto.title,
@@ -53,7 +68,35 @@ export class ListingsService {
 			address: dto.address,
 			transaction_type: dto.transaction_type,
 			price_unit: dto.price_unit,
+			category,
 		});
+
+		// Attach real estate or vehicle attributes if category matches
+		let realEstate: RealEstateAttribute | undefined;
+		let vehicle: VehicleAttribute | undefined;
+		if (category.name.toLowerCase().includes('real estate')) {
+			realEstate = this.realEstateRepository.create({
+				propertyType: dto.propertyType,
+				areaSqm: dto.areaSqm,
+				bedrooms: dto.bedrooms,
+				bathrooms: dto.bathrooms,
+				floorLevel: dto.floorLevel,
+				furnished: dto.furnished,
+			});
+			listing.realEstateAttributes = realEstate;
+		} else if (category.name.toLowerCase().includes('vehicle')) {
+			vehicle = this.vehicleRepository.create({
+				make: dto.make,
+				model: dto.model,
+				year: dto.year,
+				mileageKm: dto.mileageKm,
+				transmission: dto.transmission,
+				fuelType: dto.fuelType,
+				color: dto.color,
+				condition: dto.condition,
+			});
+			listing.vehicleAttributes = vehicle;
+		}
 
 		const saved = await this.listingsRepository.save(listing);
 
