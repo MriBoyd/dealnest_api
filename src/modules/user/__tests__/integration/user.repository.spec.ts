@@ -6,15 +6,16 @@ import { testDatabaseConfig } from '../../../../config/test-database.config';
 import { CreateUserDto } from '../../presentation/dto/create-user.dto';
 import { Role } from '../../../../common/enums/role.enum';
 import { ConflictException } from '@nestjs/common';
-import { EmailService } from 'src/modules/email/application/services/email.service';
+import { EmailService } from '../../../email/application/services/email.service';
 import { EmailVerification } from 'src/modules/email/domain/entities/email-verification.entity';
-import { TestUtils } from 'src/test/test-utils';
-import { Listing } from 'src/modules/listings/domain/entities/listing.entity';
-import { Review } from 'src/modules/reviews/domain/entities/review.entity';
-import { AuthService } from 'src/modules/auth/application/services/auth.service';
+import { Listing } from '../../../listings/domain/entities/listing.entity';
+import { Review } from '../../../reviews/domain/entities/review.entity';
+import { AuthService } from '../../../auth/application/services/auth.service';
 import { JwtModule } from '@nestjs/jwt';
-import { Mailer } from 'src/modules/email/application/services/mailer';
-import { PasswordResetToken } from 'src/modules/auth/domain/entities/password-reset-token.entity';
+import { Mailer } from '../../..//email/application/services/mailer';
+import { PasswordResetToken } from '../../..//auth/domain/entities/password-reset-token.entity';
+import { Report } from '../../../listings/domain/entities/report.entity';
+import { TestUtils } from 'src/test/test-utils';
 
 class MockEmailService {
 	generateAndSendVerificationToken = jest.fn().mockResolvedValue(undefined);
@@ -29,7 +30,10 @@ describe('UserService (Integration)', () => {
 		module = await Test.createTestingModule({
 			imports: [
 				TypeOrmModule.forRoot(testDatabaseConfig as TypeOrmModuleOptions),
-				TypeOrmModule.forFeature([User, EmailVerification, Listing, Review, PasswordResetToken]),
+								TypeOrmModule.forFeature([
+									User, EmailVerification, Listing, Review, PasswordResetToken,
+									Report,
+								]),
 				JwtModule.register({ secret: 'testsecret' }),
 			],
 			providers: [
@@ -58,6 +62,7 @@ describe('UserService (Integration)', () => {
 			email: 'test@example.com',
 			password: 'password123',
 			name: 'Test User',
+			business_name: 'Test Business',
 			role: Role.INDIVIDUAL_BUYER,
 			phone_number: '1234567890',
 		};
@@ -68,6 +73,7 @@ describe('UserService (Integration)', () => {
 		const dbUser = await service.findUserByEmail('test@example.com');
 		expect(dbUser).toBeDefined();
 		expect(dbUser!.email).toEqual('test@example.com');
+		expect(dbUser!.business_name).toEqual('Test Business');
 	});
 
 	it('should not create a user if email already exists', async () => {
@@ -75,6 +81,7 @@ describe('UserService (Integration)', () => {
 			email: 'test@example.com',
 			password: 'password123',
 			name: 'Test User',
+			business_name: 'Test Business',
 			role: Role.INDIVIDUAL_BUYER,
 			phone_number: '1234567890',
 		};
@@ -88,6 +95,7 @@ describe('UserService (Integration)', () => {
 			email: 'test@example.com',
 			password: 'password123',
 			name: 'Test User',
+			business_name: 'Test Business',
 			role: Role.INDIVIDUAL_BUYER,
 			phone_number: '1234567890',
 		};
@@ -103,16 +111,19 @@ describe('UserService (Integration)', () => {
 			email: 'test@example.com',
 			password: 'password123',
 			name: 'Test User',
+			business_name: 'Test Business',
 			role: Role.INDIVIDUAL_BUYER,
 			phone_number: '1234567890',
 		};
 		const user = await service.createUser(createUserDto);
 
-		const updatedUser = await service.updateProfile(user.id, { name: 'Updated Name' });
+		const updatedUser = await service.updateProfile(user.id, { name: 'Updated Name', business_name: 'Updated Business' });
 		expect(updatedUser.name).toEqual('Updated Name');
+		expect(updatedUser.business_name).toEqual('Updated Business');
 
 		const dbUser = await service.findUserById(user.id);
 		expect(dbUser.name).toEqual('Updated Name');
+		expect(dbUser.business_name).toEqual('Updated Business');
 	});
 
 	it('should delete a user profile', async () => {
@@ -120,6 +131,7 @@ describe('UserService (Integration)', () => {
 			email: 'test@example.com',
 			password: 'password123',
 			name: 'Test User',
+			business_name: 'Test Business',
 			role: Role.INDIVIDUAL_BUYER,
 			phone_number: '1234567890',
 		};

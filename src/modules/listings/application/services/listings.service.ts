@@ -211,7 +211,10 @@ export class ListingsService {
 			throw new ForbiddenException('Only admins can update listing status');
 		}
 
-		const listing = await this.listingsRepository.findOne({ where: { id } });
+		const listing = await this.listingsRepository.findOne({
+			where: { id },
+			relations: ['owner'],
+		});
 
 		if (!listing) {
 			throw new NotFoundException(`Listing with id ${id} not found`);

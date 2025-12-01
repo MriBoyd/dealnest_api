@@ -6,16 +6,11 @@ import {
 	UnauthorizedException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
-
 import { CreateUserDto } from '../../presentation/dto/create-user.dto';
 import { Repository } from 'typeorm';
 import { User } from '../../domain/entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { randomBytes } from 'crypto';
 import { EmailService as AppEmailService } from '../../../email/application/services/email.service';
-// Email verification responsibilities moved to dedicated module/service
-// import { EmailService } from '../../../auth/infrastructure/adapters/email.service';
-import { plainToInstance } from 'class-transformer';
 import { UserResponseDto } from '../../presentation/dto/user-response.dto';
 import { UserMapper } from '../mappers/user.mapper';
 import {
@@ -38,7 +33,7 @@ export class UserService {
 		createUserDto: CreateUserDto,
 		isOAuth = false,
 	): Promise<UserResponseDto> {
-		const { phone_number, email, password, name } = createUserDto;
+		const { phone_number, email, password, name, business_name } = createUserDto;
 
 		const existing = await this.userRepo.findOne({
 			where: [{ phone_number: phone_number || undefined }, { email }],
@@ -86,12 +81,13 @@ export class UserService {
 			email,
 			password_hash,
 			name,
+			business_name,
 			role: createUserDto.role,
 			is_email_verified,
 		});
 
 		if (password) {
-			   await this.emailService.generateAndSendVerificationToken(user);
+			await this.emailService.generateAndSendVerificationToken(user);
 		}
 
 		const saved = await this.userRepo.save(user);
@@ -175,6 +171,7 @@ export class UserService {
 
 		Object.assign(user, {
 			name: dto.name ?? user.name,
+			business_name: dto.business_name ?? user.business_name,
 			phone_number: dto.phone_number ?? user.phone_number,
 			preferred_language: dto.preferred_language ?? user.preferred_language,
 		});

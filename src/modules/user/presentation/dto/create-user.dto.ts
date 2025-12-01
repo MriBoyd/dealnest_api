@@ -33,6 +33,10 @@ export class CreateUserDto {
   @IsString()
   name: string;
 
+  @IsOptional()
+  @IsString()
+  business_name?: string;
+
   @IsNotEmpty()
   @IsEnum(Role)
   role: Role;

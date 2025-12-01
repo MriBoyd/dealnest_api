@@ -48,6 +48,10 @@ export class User {
   @Expose()
   name: string;
 
+  @Column({ nullable: true })
+  @Expose()
+  business_name?: string;
+
   @Column({
     type: 'enum',
     enum: Role,

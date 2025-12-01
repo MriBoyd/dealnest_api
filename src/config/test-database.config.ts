@@ -11,7 +11,6 @@ export const testDatabaseConfig = {
     password: process.env.DB_PASS,
     database: process.env.DB_NAME,
     entities: [join(process.cwd(), 'src/**/*.entity.{ts,js}')],
-    synchronize: true,
-    dropSchema: true,
-    logging: false,
-};
+        synchronize: true,
+        dropSchema: true,
+        logging: false,};

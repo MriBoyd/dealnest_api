@@ -8,9 +8,11 @@ import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify
 
 async function bootstrap() {
   const fastifyAdapter = new FastifyAdapter({ bodyLimit: 50 * 1024 * 1024 });
+
   // Register Fastify plugins for body parsing and multipart
   await fastifyAdapter.register(require('@fastify/formbody'));
   await fastifyAdapter.register(require('@fastify/multipart'));
+
 
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,

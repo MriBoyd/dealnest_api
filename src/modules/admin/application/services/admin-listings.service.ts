@@ -28,7 +28,7 @@ export class AdminListingsService {
   async listAllForReview(): Promise<Listing[]> {
     return this.listingsRepo.find({
       where: { status: ListingStatus.PENDING_VERIFICATION },
-      relations: ['owner', 'media'],
+      relations: ['owner', 'category'],
       order: { created_at: 'DESC' },
     });
   }

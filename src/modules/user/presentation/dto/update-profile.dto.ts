@@ -8,6 +8,10 @@ export class UpdateProfileDto {
 
   @IsOptional()
   @IsString()
+  business_name?: string;
+
+  @IsOptional()
+  @IsString()
   phone_number?: string;
 
   @IsOptional()

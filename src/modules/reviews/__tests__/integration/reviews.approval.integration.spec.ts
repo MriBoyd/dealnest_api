@@ -10,7 +10,6 @@ import { testDatabaseConfig } from '../../../../config/test-database.config';
 import { Repository } from 'typeorm';
 import { Role } from '../../../../common/enums/role.enum';
 import { ForbiddenException } from '@nestjs/common';
-import { TestUtils } from 'src/test/test-utils';
 import { AuthService } from 'src/modules/auth/application/services/auth.service';
 import { EmailService } from 'src/modules/email/application/services/email.service';
 import { UserService } from 'src/modules/user/application/services/user.service';
@@ -19,6 +18,8 @@ import { Mailer } from 'src/modules/email/application/services/mailer';
 import { PasswordResetToken } from 'src/modules/auth/domain/entities/password-reset-token.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
+import { Report } from '../../../listings/domain/entities/report.entity';
+import { TestUtils } from 'src/test/test-utils';
 
 describe('Reviews Approval (Integration)', () => {
     let service: ReviewsService;
@@ -35,7 +36,10 @@ describe('Reviews Approval (Integration)', () => {
         moduleRef = await Test.createTestingModule({
             imports: [
                 TypeOrmModule.forRoot(testDatabaseConfig as TypeOrmModuleOptions),
-                TypeOrmModule.forFeature([Review, Listing, User, PasswordResetToken, EmailVerification]),
+                                TypeOrmModule.forFeature([
+                                    Review, Listing, User, PasswordResetToken, EmailVerification,
+                                    Report,
+                                ]),
             ],
             providers: [
                 ReviewsService,

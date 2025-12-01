@@ -10,7 +10,6 @@ import { Report } from '../../domain/entities/report.entity';
 import { User } from '../../../user/domain/entities/user.entity';
 import { Listing } from '../../domain/entities/listing.entity';
 import { Repository } from 'typeorm';
-import { TestUtils } from '../../../../test/test-utils';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { CreateReportDto } from '../../presentation/dto/create-report.dto';
 import { PasswordResetToken } from '../../../auth/domain/entities/password-reset-token.entity';
@@ -24,6 +23,7 @@ import { Review } from '../../../reviews/domain/entities/review.entity';
 import { EmailService } from '../../../email/application/services/email.service';
 import { ConfigService } from '@nestjs/config';
 import { EmailVerification } from '../../../email/domain/entities/email-verification.entity';
+import { TestUtils } from 'src/test/test-utils';
 
 describe('ReportsService (Integration)', () => {
 	let service: ReportsService;

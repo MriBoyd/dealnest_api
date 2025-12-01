@@ -10,7 +10,6 @@ import { User } from '../../../user/domain/entities/user.entity';
 import { Role } from '../../../../common/enums/role.enum';
 import { CreateBookingDto } from '../../presentation/dto/create-booking.dto';
 import { UpdateBookingStatusDto } from '../../presentation/dto/update-booking-status.dto';
-import { TestUtils } from 'src/test/test-utils';
 import { AuthService } from 'src/modules/auth/application/services/auth.service';
 import { UserService } from 'src/modules/user/application/services/user.service';
 import { JwtService } from '@nestjs/jwt';
@@ -19,7 +18,9 @@ import { PasswordResetToken } from 'src/modules/auth/domain/entities/password-re
 import { EmailService } from 'src/modules/email/application/services/email.service';
 import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Review } from 'src/modules/reviews/domain/entities/review.entity';
+import { Review } from '../../../reviews/domain/entities/review.entity';
+import { Report } from '../../../listings/domain/entities/report.entity';
+import { TestUtils } from 'src/test/test-utils';
 
 
 describe('BookingsService (Integration)', () => {
@@ -34,7 +35,10 @@ describe('BookingsService (Integration)', () => {
     moduleRef = await Test.createTestingModule({
       imports: [
         TypeOrmModule.forRoot(testDatabaseConfig as TypeOrmModuleOptions),
-        TypeOrmModule.forFeature([Booking, Listing, User, Review, PasswordResetToken, EmailVerification]),
+        TypeOrmModule.forFeature([
+          Booking, Listing, User, Review, PasswordResetToken, EmailVerification,
+          Report,
+        ]),
 
       ],
       providers: [

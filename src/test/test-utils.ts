@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from '../modules/user/domain/entities/user.entity';
 import { Listing } from '../modules/listings/domain/entities/listing.entity';
 import { Review } from '../modules/reviews/domain/entities/review.entity';
+import { Report } from '../modules/listings/domain/entities/report.entity';
 import { DataSource, Repository } from 'typeorm';
 import { AuthService } from '../modules/auth/application/services/auth.service';
 import { Role } from '../common/enums/role.enum';
@@ -14,6 +15,7 @@ export class TestUtils {
     @InjectRepository(User) private readonly userRepo: Repository<User>,
     @InjectRepository(Listing) private readonly listingRepo: Repository<Listing>,
     @InjectRepository(Review) private readonly reviewRepo: Repository<Review>,
+    @InjectRepository(Report) private readonly reportRepo: Repository<Report>,
     private readonly authService: AuthService,
     private readonly dataSource: DataSource,
   ) {}
@@ -74,5 +76,18 @@ export class TestUtils {
       comment: data.comment,
     } as Review);
     return this.reviewRepo.save(review as Review);
+  }
+
+  async createReport(
+    reporter: User,
+    reportedListing: Listing,
+    data: Partial<Report>,
+  ): Promise<Report> {
+    const report = this.reportRepo.create({
+      reporter,
+      reportedListing,
+      reason: data.reason || 'Test Report Reason',
+    } as Report);
+    return this.reportRepo.save(report);
   }
 }

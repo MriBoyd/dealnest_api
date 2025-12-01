@@ -30,7 +30,7 @@ export class Listing {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => User, (user) => user.listings, { eager: true })
+  @ManyToOne(() => User, (user) => user.listings)
   owner: User;
 
   @ManyToOne(() => Category, (category) => category.listings)

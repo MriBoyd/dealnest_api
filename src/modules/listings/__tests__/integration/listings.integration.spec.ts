@@ -11,7 +11,6 @@ import { Role } from '../../../../common/enums/role.enum';
 import { ListingStatus } from '../../domain/enums/listing-status.enum';
 import { UpdateListingMediaDto } from '../../presentation/dto/update-listing-media.dto';
 import { UpdateListingStatusDto } from '../../presentation/dto/update-listing-status.dto';
-import { TestUtils } from 'src/test/test-utils';
 import { Review } from '../../../reviews/domain/entities/review.entity';
 import { AuthService } from 'src/modules/auth/application/services/auth.service';
 import { UserService } from 'src/modules/user/application/services/user.service';
@@ -26,6 +25,8 @@ import { VehicleAttribute } from '../../domain/entities/vehicle.entity';
 import { CreateListingDto } from '../../presentation/dto/create-listing.dto';
 import { PriceUnit } from '../../domain/enums/price-unit.enum';
 import { TransactionType } from '../../domain/enums/transaction-type.enum';
+import { Report } from '../../domain/entities/report.entity';
+import { TestUtils } from 'src/test/test-utils';
 
 
 describe('ListingsService (Integration)', () => {
@@ -43,7 +44,8 @@ describe('ListingsService (Integration)', () => {
         TypeOrmModule.forRoot(testDatabaseConfig as TypeOrmModuleOptions),
         TypeOrmModule.forFeature([
           Listing, ListingImage, User, Review, PasswordResetToken, EmailVerification,
-          Category, RealEstateAttribute, VehicleAttribute
+          Category, RealEstateAttribute, VehicleAttribute,
+          Report,
         ]),
       ],
       providers: [

@@ -69,6 +69,7 @@ describe('UserService', () => {
       email: 'test@example.com',
       password: 'password123',
       name: 'Test User',
+      business_name: 'Test Business',
       role: Role.INDIVIDUAL_BUYER,
       phone_number: '1234567890',
     };
@@ -123,6 +124,18 @@ describe('UserService', () => {
       expect(result.name).toEqual('Updated Name');
       expect(mockUserRepo.findOne).toHaveBeenCalledWith({ where: { id: userId } });
       expect(mockUserRepo.save).toHaveBeenCalledWith(expect.objectContaining({ name: 'Updated Name' }));
+    });
+
+    it('should update a user business name', async () => {
+      const dto: UpdateProfileDto = { business_name: 'New Business Name' };
+      mockUserRepo.findOne.mockResolvedValue(user);
+      mockUserRepo.save.mockImplementation(u => Promise.resolve(u));
+
+      const result = await service.updateProfile(userId, dto);
+
+      expect(result.business_name).toEqual('New Business Name');
+      expect(mockUserRepo.findOne).toHaveBeenCalledWith({ where: { id: userId } });
+      expect(mockUserRepo.save).toHaveBeenCalledWith(expect.objectContaining({ business_name: 'New Business Name' }));
     });
 
     it('should throw NotFoundException if user not found', async () => {
