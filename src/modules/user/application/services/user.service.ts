@@ -76,7 +76,7 @@ export class UserService {
 			}
 		}
 
-		const user = this.userRepo.create({
+		const newUser = this.userRepo.create({
 			phone_number,
 			email,
 			password_hash,
@@ -86,11 +86,12 @@ export class UserService {
 			is_email_verified,
 		});
 
+		const saved = await this.userRepo.save(newUser);
+
 		if (password) {
-			await this.emailService.generateAndSendVerificationToken(user);
+			await this.emailService.generateAndSendVerificationToken(saved);
 		}
 
-		const saved = await this.userRepo.save(user);
 		return UserMapper.toResponse(saved);
 	}
 
@@ -138,7 +139,7 @@ export class UserService {
 		user.profile_pic_mimetype = mimetype;
 		user.profile_pic_data = buffer;
 
-		this.userRepo.save(user);
+		await this.userRepo.save(user);
 
 		return UserMapper.toResponse(user);
 	}

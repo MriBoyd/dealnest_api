@@ -10,7 +10,6 @@ import { Listing } from '../../domain/entities/listing.entity';
 import { Category } from '../../domain/entities/category.entity';
 import { RealEstateAttribute } from '../../domain/entities/real-estate.entity';
 import { VehicleAttribute } from '../../domain/entities/vehicle.entity';
-import { CreateListingDto } from '../../presentation/dto/create-listing.dto';
 import { User } from '../../../user/domain/entities/user.entity';
 import { ListingMapper } from '../mappers/listing.mapper';
 import { ListingResponseDto } from '../../presentation/dto/listing-response.dto';
@@ -18,6 +17,7 @@ import { FilterListingsDto } from '../../presentation/dto/filter-listings.dto';
 import { UpdateListingStatusDto } from '../../presentation/dto/update-listing-status.dto';
 import { UpdateListingMediaDto } from '../../presentation/dto/update-listing-media.dto';
 import { ListingImage } from '../../../media/domain/entities/media.entity';
+import { CreateListingDto } from '../../presentation/dto/create-listing.dto';
 
 @Injectable()
 export class ListingsService {
@@ -75,6 +75,9 @@ export class ListingsService {
 		let realEstate: RealEstateAttribute | undefined;
 		let vehicle: VehicleAttribute | undefined;
 		if (category.name.toLowerCase().includes('real estate')) {
+			if (!dto.propertyType) {
+				throw new BadRequestException('Property type is required for real estate listings');
+			}
 			realEstate = this.realEstateRepository.create({
 				propertyType: dto.propertyType,
 				areaSqm: dto.areaSqm,
@@ -277,5 +280,9 @@ export class ListingsService {
 			relations: ['images'],
 		});
 		return listings.map((listing) => ListingMapper.toResponse(listing));
+	}
+
+	async getCategories(): Promise<Category[]> {
+		return this.categoryRepository.find();
 	}
 }

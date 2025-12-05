@@ -3,11 +3,17 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 't
 
 @Entity('listing_images')
 export class ListingImage {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-  @Column({ name: 'image_url' })
-  imageUrl: string;
+  @Column()
+  filename: string;
+
+  @Column()
+  mimetype: string;
+
+  @Column({ type: 'bytea', nullable: true }) // For storing binary data directly
+  data: Buffer;
 
   @Column({ name: 'is_primary', default: false })
   isPrimary: boolean;

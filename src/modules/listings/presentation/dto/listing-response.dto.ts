@@ -2,8 +2,7 @@ import { UserResponseDto } from 'src/modules/user/presentation/dto/user-response
 import { ListingStatus } from '../../domain/enums/listing-status.enum';
 
 export class ListingImageResponseDto {
-  id: number;
-  url: string;
+  id: string;
   isPrimary: boolean;
 }
 

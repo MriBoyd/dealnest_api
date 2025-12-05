@@ -1,13 +1,7 @@
 import { IsNotEmpty, IsString } from 'class-validator';
 
 export class UploadMediaDto {
-  @IsNotEmpty()
-  @IsString()
-  base64: string;
-
-  @IsString()
+  // You can keep filename and mimetype if you want, but not required for file upload
   filename?: string;
-
-  @IsString()
   mimetype?: string;
 }

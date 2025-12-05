@@ -11,7 +11,6 @@ import {
 	Patch,
 } from '@nestjs/common';
 import { ListingsService } from '../application/services/listings.service';
-import { CreateListingDto } from './dto/create-listing.dto';
 import { JwtAuthGuard } from '../../auth/infrastructure/guards/jwt-auth.guard';
 import { FilterListingsDto } from './dto/filter-listings.dto';
 import { ListingResponseDto } from './dto/listing-response.dto';
@@ -21,6 +20,7 @@ import { User } from 'src/modules/user/domain/entities/user.entity';
 import { UpdateListingMediaDto } from './dto/update-listing-media.dto';
 import { Roles } from 'src/common/decorators/roles.decorator';
 import { Role } from 'src/common/enums/role.enum';
+import { CreateListingDto } from './dto/create-listing.dto';
 
 @Controller('listings')
 @UseGuards(JwtAuthGuard)
@@ -75,5 +75,10 @@ export class ListingsController {
 	) {
 		const result = await this.listingsService.updateMedia(id, dto, user);
 		return result;
+	}
+
+	@Get('categories')
+	async getCategories() {
+		return this.listingsService.getCategories();
 	}
 }

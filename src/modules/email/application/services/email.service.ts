@@ -24,8 +24,11 @@ export class EmailService {
     await this.mailer.sendVerificationEmail(user.email, token);
   }
 
-  async verifyEmail(email: string, token: string): Promise<{ message: string }> {
-    const user = await this.userRepo.findOne({ where: { email: email.toLowerCase() } });
+    async verifyEmail(email: string, token: string): Promise<{ message: string }> {
+
+      if (!email) throw new BadRequestException('Email is required');
+
+      const user = await this.userRepo.findOne({ where: { email: email.toLowerCase() } });
     if (!user) throw new NotFoundException('Invalid token');
     if (user.is_email_verified) return { message: 'Email already verified' };
 

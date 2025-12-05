@@ -21,7 +21,6 @@ export class ListingMapper {
       images: (listing.images?.map(
         (img): ListingImageResponseDto => ({
           id: img.id,
-          url: img.imageUrl,
           isPrimary: img.isPrimary,
         }),
       ) ?? []),

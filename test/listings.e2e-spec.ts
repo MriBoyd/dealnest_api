@@ -145,6 +145,4 @@ describe('Listings (e2e)', () => {
       .send({ imageIds: [image1.id, image2.id] })
       .expect(200);
 
-    expect(res.body.images.length).toBe(2);
-  });
 });

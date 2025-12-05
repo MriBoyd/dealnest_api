@@ -72,6 +72,10 @@ describe('AdminListingsService', () => {
     };
     const listing = new Listing();
 
+    beforeEach(() => {
+      jest.clearAllMocks();
+    });
+
     it('should throw ForbiddenException if user is not an admin', async () => {
       await expect(service.updateStatus(listingId, dto, nonAdmin)).rejects.toThrow(ForbiddenException);
     });
