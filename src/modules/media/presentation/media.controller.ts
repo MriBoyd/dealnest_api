@@ -1,4 +1,4 @@
-import { Controller, Post, UploadedFile, UseInterceptors, UseGuards, Get, Param, BadRequestException, Req, Query } from '@nestjs/common';
+import { Controller, Post, UploadedFile, UseInterceptors, UseGuards, Get, Param, Body, Query, HttpCode, BadRequestException } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/modules/auth/infrastructure/guards/jwt-auth.guard';
 import { MediaService } from '../application/services/media.service';
 import { FileInterceptor, type File } from '@nest-lab/fastify-multer';
@@ -9,18 +9,16 @@ export class MediaController {
 	constructor(private readonly mediaService: MediaService) { }
 
 	@Post('upload-url')
-	@UseInterceptors(FileInterceptor('file', { limits: { fileSize: 50 * 1024 * 1024 } })) // 50MB limit
-	async upload(@UploadedFile() file: File, @Query('isPrimary') isPrimary?: boolean) {
-		if (!file) {
-			return { message: 'No file received' };
+	@HttpCode(201)
+	async upload(@Body() body: { base64: string; filename: string; mimetype?: string }, @Query('isPrimary') isPrimary?: boolean) {
+		if (!body?.base64 || !body?.filename) {
+			throw new BadRequestException('base64 and filename are required');
 		}
-		if (!file.buffer) {
-			return { message: 'No file buffer received' };
-		}
+		const buffer = Buffer.from(body.base64, 'base64');
 		const saved = await this.mediaService.upload({
-			originalname: file.filename ?? 'unknown',
-			mimetype: file.mimetype,
-			buffer: file.buffer,
+			originalname: body.filename,
+			mimetype: body.mimetype ?? 'application/octet-stream',
+			buffer,
 		}, isPrimary);
 		return saved;
 	}

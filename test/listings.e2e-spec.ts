@@ -144,5 +144,9 @@ describe('Listings (e2e)', () => {
       .set('Authorization', `Bearer ${sellerToken}`)
       .send({ imageIds: [image1.id, image2.id] })
       .expect(200);
-
+    expect(Array.isArray(res.body.images)).toBe(true);
+    expect(res.body.images.map((i: any) => i.id).sort()).toEqual(
+      [image1.id, image2.id].sort()
+    );
+  });
 });

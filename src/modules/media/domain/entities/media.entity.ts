@@ -6,10 +6,13 @@ export class ListingImage {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column()
+  @Column({ type: 'text', nullable: true })
   filename: string;
 
-  @Column()
+  @Column({ name: 'image_url', type: 'text', nullable: true })
+  imageUrl: string;
+
+  @Column({ type: 'text', nullable: true })
   mimetype: string;
 
   @Column({ type: 'bytea', nullable: true }) // For storing binary data directly

@@ -52,9 +52,8 @@ export class CreateListingDto {
 
   @IsOptional()
   @IsArray()
-  @Type(() => Number)
-  @IsInt({ each: true })
-  imageIds?: number[];
+  @IsUUID('4', { each: true })
+  imageIds?: string[];
 
   // Real estate attributes
   @IsOptional()
