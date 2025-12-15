@@ -25,7 +25,6 @@ export class UserService {
 	constructor(
 		@InjectRepository(User)
 		private readonly userRepo: Repository<User>,
-		// Inject new dedicated email verification service
 		private readonly emailService: AppEmailService,
 	) { }
 
@@ -46,7 +45,6 @@ export class UserService {
 		let password_hash: string | undefined = undefined;
 		let is_email_verified = false;
 
-		// If password is provided, treat as non-OAuth (require password, do not allow verified)
 		if (password) {
 			if (!password || password.length < 8) {
 				throw new BadRequestException(
@@ -54,15 +52,13 @@ export class UserService {
 				);
 			}
 			if (createUserDto.is_email_verified) {
-				// Never allow client to set this
 				throw new BadRequestException(
 					'is_email_verified must be false for password-based registration.',
 				);
 			}
 			password_hash = await bcrypt.hash(password, 10);
-			is_email_verified = false; // Never allow client to set this for password-based
+			is_email_verified = false;
 		} else {
-			// Only allow is_email_verified for OAuth if called from trusted OAuth flow
 			if (!isOAuth) {
 				throw new BadRequestException(
 					'registration without password is not allowed.',
@@ -94,9 +90,6 @@ export class UserService {
 
 		return UserMapper.toResponse(saved);
 	}
-
-	// Email verification logic has been extracted to EmailVerificationService.
-	// Legacy methods removed for a cleaner, single‑responsibility UserService.
 
 	async update(id: string, attrs: Partial<User>): Promise<User> {
 		const user = await this.findUserById(id);

@@ -8,6 +8,7 @@ import { SwaggerSyncModule } from 'nestjs-swagger-sync';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ListingsModule } from './modules/listings/listings.module';
 import { MediaModule } from './modules/media/media.module';
+import { FastifyMulterModule } from '@nest-lab/fastify-multer';
 import { AdminModule } from './modules/admin/admin.module';
 import { BookingsModule } from './modules/bookings/bookings.module';
 import { KycModule } from './modules/kyc/kyc.module';
@@ -19,48 +20,49 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
 import { AgentModule } from './modules/agent/agent.module';
 import { EmailModule } from './modules/email/email.module';
 @Module({
-  imports: [
-    EventEmitterModule.forRoot(),
-    ConfigModule.forRoot({
-      isGlobal: true,
-    }),
-    SwaggerSyncModule.register({
-      apiKey:
-        'PMAK-68c91efe594c280001e8a3ec-cc11deccd20f33b15aabd532040b9edfff',
-      swaggerPath: 'api',
-      baseUrl: 'http://localhost:8000',
-      runTest: true,
-      collectionName: 'Dealnest',
-    }),
-    TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.get<string>('DB_HOST'),
-        port: configService.get<number>('DB_PORT'),
-        username: configService.get<string>('DB_USERNAME'),
-        password: configService.get<string>('DB_PASSWORD'),
-        database: configService.get<string>('DB_DATABASE'),
-        entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        synchronize: true,
-      }),
-      inject: [ConfigService],
-    }),
-    UserModule,
-    AuthModule,
-    ListingsModule,
-    MediaModule,
-    AdminModule,
-    BookingsModule,
-    KycModule,
-    MessagingModule,
-    NotificationsModule,
-    AdsModule,
-    ReviewsModule,
-    AgentModule,
-    EmailModule,
-  ],
-  controllers: [AppController],
-  providers: [AppService],
+	imports: [
+		EventEmitterModule.forRoot(),
+		ConfigModule.forRoot({
+			isGlobal: true,
+		}),
+		SwaggerSyncModule.register({
+			apiKey:
+				'PMAK-68c91efe594c280001e8a3ec-cc11deccd20f33b15aabd532040b9edfff',
+			swaggerPath: 'api',
+			baseUrl: 'http://localhost:8000',
+			runTest: true,
+			collectionName: 'Dealnest',
+		}),
+		TypeOrmModule.forRootAsync({
+			imports: [ConfigModule],
+			useFactory: async (configService: ConfigService) => ({
+				type: 'postgres',
+				host: configService.get<string>('DB_HOST'),
+				port: configService.get<number>('DB_PORT'),
+				username: configService.get<string>('DB_USERNAME'),
+				password: configService.get<string>('DB_PASSWORD'),
+				database: configService.get<string>('DB_DATABASE'),
+				entities: [__dirname + '/**/*.entity{.ts,.js}'],
+				synchronize: true,
+			}),
+			inject: [ConfigService],
+		}),
+		UserModule,
+		AuthModule,
+		ListingsModule,
+		MediaModule,
+		FastifyMulterModule,
+		AdminModule,
+		BookingsModule,
+		KycModule,
+		MessagingModule,
+		NotificationsModule,
+		AdsModule,
+		ReviewsModule,
+		AgentModule,
+		EmailModule,
+	],
+	controllers: [AppController],
+	providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

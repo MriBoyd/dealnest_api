@@ -1,7 +1,7 @@
-import { Controller, Post, UploadedFile, UseInterceptors, UseGuards, Get, Param, Body, Query, HttpCode, BadRequestException } from '@nestjs/common';
+import { Controller, Post, UseGuards, Get, Param, Body, Query, HttpCode, BadRequestException } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/modules/auth/infrastructure/guards/jwt-auth.guard';
 import { MediaService } from '../application/services/media.service';
-import { FileInterceptor, type File } from '@nest-lab/fastify-multer';
+// multer is registered globally in AppModule; controller uses JSON upload endpoint.
 
 @Controller('media')
 @UseGuards(JwtAuthGuard)

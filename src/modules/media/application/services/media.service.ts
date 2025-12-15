@@ -17,7 +17,6 @@ export class MediaService {
             data: file.buffer,
             isPrimary: isPrimary || false,
         });
-        console.log(isPrimary);
         const saved = await this.mediaRepo.save(media);
         return { id: saved.id, filename: saved.filename, mimetype: saved.mimetype, isPrimary: saved.isPrimary };
     }
