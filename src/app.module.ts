@@ -27,7 +27,7 @@ import { EmailModule } from './modules/email/email.module';
 		}),
 		SwaggerSyncModule.register({
 			apiKey:
-				'PMAK-68c91efe594c280001e8a3ec-cc11deccd20f33b15aabd532040b9edfff',
+				'api',
 			swaggerPath: 'api',
 			baseUrl: 'http://localhost:8000',
 			runTest: true,
